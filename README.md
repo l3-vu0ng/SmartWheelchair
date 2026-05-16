@@ -39,3 +39,44 @@ Hệ thống cho phép người dùng hoặc người thân điều khiển xe l
 * **Mobile App:** Framework Flutter (Ngôn ngữ Dart).
 * **Giao thức:** MQTT (Broker: HiveMQ Cloud).
 * **Định dạng dữ liệu:** JSON.
+
+## 🏗️ 4. Kiến trúc Hệ thống
+
+Dự án được xây dựng dựa trên **Kiến trúc IoT 4 lớp (4-Layer IoT Architecture)**, đảm bảo luồng dữ liệu hai chiều (điều khiển & giám sát) hoạt động với độ trễ thấp (low latency) và đáng tin cậy.
+
+```mermaid
+flowchart TD
+    classDef layerFill fill:#f8f9fa,stroke:#adb5bd,stroke-width:2px,stroke-dasharray: 5 5
+    classDef item fill:#ffffff,stroke:#495057,stroke-width:1px
+    classDef highlight fill:#e7f5ff,stroke:#228be6,stroke-width:2px
+
+    subgraph L4 ["4. Lớp Ứng dụng (Application Layer)"]
+        App["📱 Smart Wheelchair App (Flutter)"]:::highlight
+    end
+
+    subgraph L3 ["3. Lớp Xử lý (Middleware Layer)"]
+        Broker["☁️ HiveMQ Cloud (MQTT Broker)"]:::highlight
+    end
+
+    subgraph L2 ["2. Lớp Mạng (Network Layer)"]
+        Network["📶 Wi-Fi & Giao thức MQTT"]:::item
+    end
+
+    subgraph L1 ["1. Lớp Nhận thức (Perception Layer)"]
+        ESP["⚡ NodeMCU ESP32 (Edge Device)"]:::highlight
+        Sensors["📡 Cảm biến (Siêu âm, Nhịp tim, Gia tốc, GPS)"]:::item
+        Motors["⚙️ Động cơ (L298N, Động cơ DC)"]:::item
+        
+        Sensors -- "Dữ liệu" --> ESP
+        ESP -- "PWM" --> Motors
+    end
+
+    %% Liên kết giữa các lớp
+    App <=="Luồng Điều khiển (Commands)"==> Broker
+    Broker <=="Định tuyến (Pub/Sub)"==> Network
+    Network <=="Luồng Giám sát (Telemetry)"==> ESP
+
+    class L1,L2,L3,L4 layerFill
+```
+
+> **Lưu ý:** Xem chi tiết phân tích từng lớp chức năng và luồng dữ liệu (Data Flow) tại file [`KIENTRUC.md`](./KIENTRUC.md).
