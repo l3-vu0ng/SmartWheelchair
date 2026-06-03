@@ -1,30 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:mqtt_client/mqtt_client.dart';
 
 import '../config/app_theme.dart';
+import '../services/connection_service.dart';
 
 /// ============================================================================
-/// [ConnectionStatusBar] — Thanh trạng thái kết nối MQTT
+/// [ConnectionStatusBar] — Thanh trạng thái kết nối (WiFi/BLE)
 /// ============================================================================
 class ConnectionStatusBar extends StatelessWidget {
-  final MqttConnectionState connectionState;
+  final AppConnectionState connectionState;
+  final ConnectionType connectionType;
   final bool isDeviceOnline;
 
   const ConnectionStatusBar({
     super.key,
     required this.connectionState,
+    required this.connectionType,
     required this.isDeviceOnline,
   });
 
   @override
   Widget build(BuildContext context) {
     final (color, icon, text) = switch (connectionState) {
-      MqttConnectionState.connected => (
+      AppConnectionState.connected => (
           AppTheme.statusOnline,
-          Icons.wifi_rounded,
-          isDeviceOnline ? 'Đã kết nối · Thiết bị Online' : 'Đã kết nối · Chờ thiết bị',
+          connectionType == ConnectionType.bluetooth
+              ? Icons.bluetooth_connected_rounded
+              : Icons.wifi_rounded,
+          connectionType == ConnectionType.bluetooth
+              ? (isDeviceOnline
+                  ? 'BLE · Thiết bị Online'
+                  : 'BLE · Đã kết nối')
+              : (isDeviceOnline
+                  ? 'WiFi · Thiết bị Online'
+                  : 'WiFi · Đã kết nối'),
         ),
-      MqttConnectionState.connecting => (
+      AppConnectionState.connecting => (
           AppTheme.statusConnecting,
           Icons.sync_rounded,
           'Đang kết nối...',

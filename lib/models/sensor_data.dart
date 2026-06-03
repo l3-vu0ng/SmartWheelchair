@@ -13,12 +13,20 @@ class SensorData {
   /// Mức pin ước tính (%) — đo bằng ADC trên ESP32.
   final double batteryLevel;
 
+  /// Vĩ độ (Latitude) của xe lăn (nếu có).
+  final double? latitude;
+
+  /// Kinh độ (Longitude) của xe lăn (nếu có).
+  final double? longitude;
+
   /// Thời điểm đo (epoch ms).
   final DateTime timestamp;
 
   const SensorData({
     required this.obstacleDistance,
     required this.batteryLevel,
+    this.latitude,
+    this.longitude,
     required this.timestamp,
   });
 
@@ -33,6 +41,8 @@ class SensorData {
     return SensorData(
       obstacleDistance: (map['distance'] as num?)?.toDouble() ?? 0.0,
       batteryLevel: (map['battery'] as num?)?.toDouble() ?? 0.0,
+      latitude: (map['latitude'] as num?)?.toDouble(),
+      longitude: (map['longitude'] as num?)?.toDouble(),
       timestamp: map['timestamp'] != null
           ? DateTime.fromMillisecondsSinceEpoch(
               (map['timestamp'] as num).toInt() * 1000)
@@ -43,6 +53,8 @@ class SensorData {
   Map<String, dynamic> toMap() => {
         'distance': obstacleDistance,
         'battery': batteryLevel,
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
         'timestamp': timestamp.millisecondsSinceEpoch ~/ 1000,
       };
 
@@ -60,5 +72,5 @@ class SensorData {
 
   @override
   String toString() =>
-      'SensorData(distance: ${obstacleDistance}cm, battery: $batteryLevel%)';
+      'SensorData(distance: ${obstacleDistance}cm, battery: $batteryLevel%, lat: $latitude, lng: $longitude)';
 }

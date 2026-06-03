@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../config/app_theme.dart';
 import '../../providers/wheelchair_provider.dart';
+import '../../widgets/connection_dialog.dart';
 
 /// ============================================================================
 /// [ControlTab] — Tab Điều khiển xe lăn
@@ -20,27 +21,28 @@ class ControlTab extends StatefulWidget {
 class _ControlTabState extends State<ControlTab> {
   String _currentDirection = 'stop';
   double _maxSpeed = 2.0; // km/h
-  late WheelchairProvider _providerRef;
+  WheelchairProvider? _providerRef;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       _providerRef = context.read<WheelchairProvider>();
-      _providerRef.addListener(_onProviderChange);
+      _providerRef?.addListener(_onProviderChange);
     });
   }
 
   void _onProviderChange() {
-    if (!mounted) return;
-    if (_providerRef.errorMessage != null) {
+    if (!mounted || _providerRef == null) return;
+    if (_providerRef!.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
             children: [
               const Icon(Icons.warning_amber_rounded, color: Colors.white),
               const SizedBox(width: 8),
-              Expanded(child: Text(_providerRef.errorMessage!)),
+              Expanded(child: Text(_providerRef!.errorMessage!)),
             ],
           ),
           backgroundColor: AppTheme.warningOrange,
@@ -49,13 +51,13 @@ class _ControlTabState extends State<ControlTab> {
           margin: const EdgeInsets.all(16),
         ),
       );
-      _providerRef.clearError();
+      _providerRef!.clearError();
     }
   }
 
   @override
   void dispose() {
-    _providerRef.removeListener(_onProviderChange);
+    _providerRef?.removeListener(_onProviderChange);
     super.dispose();
   }
 
@@ -99,7 +101,8 @@ class _ControlTabState extends State<ControlTab> {
                   currentDirection: _currentDirection,
                   onDirection: (dir) {
                     setState(() => _currentDirection = dir);
-                    provider.sendCommand(dir, speed: 150);
+                    int pwm = (_maxSpeed / 6.0 * 255).toInt();
+                    provider.sendCommand(dir, speed: pwm);
                     HapticFeedback.lightImpact();
                   },
                   onFullScreenTap: () => _showFullScreenControl(context, provider),
@@ -141,15 +144,13 @@ class _ControlHeader extends StatelessWidget {
             ],
           ),
         ),
-        // Connect Button (Real connection instead of demo mode for actual usage)
+        // Connect Button — mở dialog chọn WiFi/BLE
         GestureDetector(
           onTap: () {
             if (provider.isConnected) {
-              provider.disconnectFromBroker();
+              provider.disconnectAll();
             } else {
-              // Bật chế độ Demo hoặc kết nối thực tế. Ở đây để linh hoạt, 
-              // có thể dùng connectToBroker() nếu có broker thật.
-              provider.startDemoMode(); 
+              ConnectionDialog.show(context);
             }
           },
           child: Container(
@@ -264,7 +265,8 @@ class _DPadCard extends StatelessWidget {
                 _DPadButton(
                   icon: Icons.keyboard_arrow_up_rounded,
                   isActive: currentDirection == 'forward',
-                  onTap: () => onDirection('forward'),
+                  onTapDown: () => onDirection('forward'),
+                  onTapUp: () => onDirection('stop'),
                   size: 64,
                 ),
                 const SizedBox(height: 12),
@@ -274,7 +276,8 @@ class _DPadCard extends StatelessWidget {
                     _DPadButton(
                       icon: Icons.keyboard_arrow_left_rounded,
                       isActive: currentDirection == 'left',
-                      onTap: () => onDirection('left'),
+                      onTapDown: () => onDirection('left'),
+                      onTapUp: () => onDirection('stop'),
                       size: 64,
                     ),
                     const SizedBox(width: 12),
@@ -303,16 +306,18 @@ class _DPadCard extends StatelessWidget {
                     _DPadButton(
                       icon: Icons.keyboard_arrow_right_rounded,
                       isActive: currentDirection == 'right',
-                      onTap: () => onDirection('right'),
+                      onTapDown: () => onDirection('right'),
+                      onTapUp: () => onDirection('stop'),
                       size: 64,
-                    ),
+                ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 _DPadButton(
                   icon: Icons.keyboard_arrow_down_rounded,
                   isActive: currentDirection == 'backward',
-                  onTap: () => onDirection('backward'),
+                  onTapDown: () => onDirection('backward'),
+                  onTapUp: () => onDirection('stop'),
                   size: 64,
                 ),
               ],
@@ -327,21 +332,23 @@ class _DPadCard extends StatelessWidget {
 class _DPadButton extends StatelessWidget {
   final IconData icon;
   final bool isActive;
-  final VoidCallback onTap;
+  final VoidCallback onTapDown;
+  final VoidCallback onTapUp;
   final double size;
 
   const _DPadButton({
     required this.icon,
     required this.isActive,
-    required this.onTap,
+    required this.onTapDown,
+    required this.onTapUp,
     this.size = 48,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: (_) => onTap(),
-      onTapUp: (_) => onTap(), // Optional: can reset to stop when let go
+      onTapDown: (_) => onTapDown(),
+      onTapUp: (_) => onTapUp(),
       child: Container(
         width: size,
         height: size,
@@ -507,7 +514,8 @@ class _FullScreenControlScreenState extends State<_FullScreenControlScreen> {
 
   void _handleDirection(String dir) {
     setState(() => _currentDirection = dir);
-    widget.provider.sendCommand(dir, speed: 150);
+    int pwm = (_localSpeed / 6.0 * 255).toInt();
+    widget.provider.sendCommand(dir, speed: pwm);
     HapticFeedback.lightImpact();
   }
 
@@ -576,7 +584,8 @@ class _FullScreenControlScreenState extends State<_FullScreenControlScreen> {
                       _DPadButton(
                         icon: Icons.keyboard_arrow_up_rounded,
                         isActive: _currentDirection == 'forward',
-                        onTap: () => _handleDirection('forward'),
+                        onTapDown: () => _handleDirection('forward'),
+                        onTapUp: () => _handleDirection('stop'),
                         size: 80,
                       ),
                       const SizedBox(height: 16),
@@ -586,7 +595,8 @@ class _FullScreenControlScreenState extends State<_FullScreenControlScreen> {
                           _DPadButton(
                             icon: Icons.keyboard_arrow_left_rounded,
                             isActive: _currentDirection == 'left',
-                            onTap: () => _handleDirection('left'),
+                            onTapDown: () => _handleDirection('left'),
+                            onTapUp: () => _handleDirection('stop'),
                             size: 80,
                           ),
                           const SizedBox(width: 16),
@@ -614,7 +624,8 @@ class _FullScreenControlScreenState extends State<_FullScreenControlScreen> {
                           _DPadButton(
                             icon: Icons.keyboard_arrow_right_rounded,
                             isActive: _currentDirection == 'right',
-                            onTap: () => _handleDirection('right'),
+                            onTapDown: () => _handleDirection('right'),
+                            onTapUp: () => _handleDirection('stop'),
                             size: 80,
                           ),
                         ],
@@ -623,7 +634,8 @@ class _FullScreenControlScreenState extends State<_FullScreenControlScreen> {
                       _DPadButton(
                         icon: Icons.keyboard_arrow_down_rounded,
                         isActive: _currentDirection == 'backward',
-                        onTap: () => _handleDirection('backward'),
+                        onTapDown: () => _handleDirection('backward'),
+                        onTapUp: () => _handleDirection('stop'),
                         size: 80,
                       ),
                     ],

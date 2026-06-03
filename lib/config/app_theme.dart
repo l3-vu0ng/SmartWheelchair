@@ -14,24 +14,24 @@ class AppTheme {
   // 1. BRAND & ACCENT COLORS
   // ===========================================================================
 
-  /// Xanh dương chính — accent toàn hệ thống.
-  static const Color primaryBlue = Color(0xFF4A90D9);
+  /// Xanh dương chính — accent toàn hệ thống (Vibrant Blue).
+  static const Color primaryBlue = Color(0xFF2563EB);
 
   /// Xanh dương đậm — gradient hero card.
-  static const Color primaryBlueDark = Color(0xFF3A7BD5);
+  static const Color primaryBlueDark = Color(0xFF1D4ED8);
 
   /// Xanh dương nhạt — background nhẹ cho badge, icon container.
-  static const Color primaryBlueLight = Color(0xFFE8F0FE);
+  static const Color primaryBlueLight = Color(0xFFDBEAFE);
 
   /// Xanh dương rất nhạt — highlight card được chọn.
-  static const Color primaryBlueOutline = Color(0xFFB3D4FC);
+  static const Color primaryBlueOutline = Color(0xFF93C5FD);
 
   // ===========================================================================
   // 2. SURFACE COLORS
   // ===========================================================================
 
   static const Color canvasWhite = Color(0xFFFFFFFF);
-  static const Color scaffoldBg = Color(0xFFF5F6FA);
+  static const Color scaffoldBg = Color(0xFFF8FAFC);
   static const Color cardBg = Color(0xFFFFFFFF);
   static const Color pureBlack = Color(0xFF000000);
 
@@ -153,9 +153,9 @@ class AppTheme {
         border: Border.all(color: borderLight, width: 0.5),
         boxShadow: [
           BoxShadow(
-            color: pureBlack.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: pureBlack.withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
           ),
         ],
       );
@@ -164,12 +164,26 @@ class AppTheme {
   static BoxDecoration get cardSelectedDecoration => BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(radiusLg),
-        border: Border.all(color: primaryBlueOutline, width: 1.5),
+        border: Border.all(color: primaryBlue, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: primaryBlue.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
+            color: primaryBlue.withValues(alpha: 0.15),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      );
+
+  /// Decoration cho Glassmorphism.
+  static BoxDecoration get glassmorphismDecoration => BoxDecoration(
+        color: canvasWhite.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(radiusXl),
+        border: Border.all(color: canvasWhite.withValues(alpha: 0.5), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: pureBlack.withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
         ],
       );

@@ -44,6 +44,11 @@ dependencies:
   geolocator: ^14.0.2
   flutter_local_notifications: ^21.0.0
   flutter_dotenv: ^5.2.1
+  firebase_core: ^4.9.0
+  firebase_auth: ^6.5.1
+  cloud_firestore: ^6.4.1
+  google_sign_in: ^6.2.1
+  flutter_blue_plus: ^1.35.2
 
 dev_dependencies:
   flutter_test:
@@ -70,6 +75,7 @@ flutter:
 
   assets:
     - .env
+    - assets/app_icon.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

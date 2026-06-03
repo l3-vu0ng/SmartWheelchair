@@ -9,9 +9,10 @@ import 'package:mqtt_client/mqtt_server_client.dart';
 import '../config/mqtt_config.dart';
 import '../models/sensor_data.dart';
 import '../models/wheelchair_status.dart';
+import 'connection_service.dart';
 
 /// ============================================================================
-/// [MqttService] — Lớp dịch vụ MQTT (Service Layer)
+/// [MqttService] — Kênh kết nối WiFi/MQTT (implements ConnectionService)
 /// ============================================================================
 /// Đảm nhận toàn bộ logic kết nối, subscribe, publish qua MQTT.
 /// Tương đương với một Service class trong Spring Boot — UI KHÔNG ĐƯỢC
@@ -20,7 +21,7 @@ import '../models/wheelchair_status.dart';
 /// Sử dụng StreamController để phát dữ liệu lên UI theo pattern Observer
 /// (tương đương EventBus hoặc LiveData trong Android).
 /// ============================================================================
-class MqttService {
+class MqttService implements ConnectionService {
   // — MQTT Client instance —
   late MqttServerClient _client;
 
@@ -39,18 +40,27 @@ class MqttService {
       StreamController<WheelchairStatus>.broadcast();
 
   /// Stream trạng thái kết nối MQTT của App.
-  final StreamController<MqttConnectionState> _connectionController =
-      StreamController<MqttConnectionState>.broadcast();
+  final StreamController<AppConnectionState> _connectionController =
+      StreamController<AppConnectionState>.broadcast();
 
   // — Public getters cho UI subscribe —
+  @override
   Stream<SensorData> get sensorStream => _sensorController.stream;
+  @override
   Stream<WheelchairStatus> get statusStream => _statusController.stream;
-  Stream<MqttConnectionState> get connectionStream =>
+  @override
+  Stream<AppConnectionState> get connectionStream =>
       _connectionController.stream;
 
   /// Trạng thái kết nối hiện tại.
-  MqttConnectionState _connectionState = MqttConnectionState.disconnected;
-  MqttConnectionState get connectionState => _connectionState;
+  AppConnectionState _connectionState = AppConnectionState.disconnected;
+  @override
+  AppConnectionState get connectionState => _connectionState;
+
+  @override
+  ConnectionType get type => ConnectionType.wifi;
+
+  StreamSubscription<List<MqttReceivedMessage<MqttMessage>>>? _updatesSubscription;
 
   // ===========================================================================
   // KHỞI TẠO VÀ KẾT NỐI
@@ -91,6 +101,7 @@ class MqttService {
   /// Kết nối tới MQTT Broker.
   /// Trả về `true` nếu thành công, `false` nếu thất bại.
   /// Try-catch bọc toàn bộ — KHÔNG throw exception ra ngoài UI.
+  @override
   Future<bool> connect() async {
     try {
       _initializeClient();
@@ -104,7 +115,7 @@ class MqttService {
 
       _client.connectionMessage = connMessage;
 
-      _updateConnectionState(MqttConnectionState.connecting);
+      _updateConnectionState(AppConnectionState.connecting);
 
       debugPrint('[MqttService] Đang kết nối tới ${MqttConfig.brokerUrl}...');
       await _client.connect();
@@ -123,20 +134,23 @@ class MqttService {
       }
     } catch (e) {
       debugPrint('[MqttService] ❌ Lỗi kết nối: $e');
-      _updateConnectionState(MqttConnectionState.disconnected);
+      _updateConnectionState(AppConnectionState.disconnected);
       return false;
     }
   }
 
   /// Ngắt kết nối và giải phóng tài nguyên.
+  @override
   void disconnect() {
     debugPrint('[MqttService] Ngắt kết nối...');
+    _updatesSubscription?.cancel();
+    _updatesSubscription = null;
     try {
       _client.disconnect();
     } catch (e) {
       // _client có thể chưa được khởi tạo nếu chưa từng gọi connect()
     }
-    _updateConnectionState(MqttConnectionState.disconnected);
+    _updateConnectionState(AppConnectionState.disconnected);
   }
 
   // ===========================================================================
@@ -159,6 +173,7 @@ class MqttService {
   ///
   /// [command] — hướng di chuyển: "forward", "backward", "left", "right", "stop"
   /// [speed] — tốc độ PWM (0-255), mặc định 200.
+  @override
   void sendCommand(String command, {int speed = 200}) {
     final payload = jsonEncode({
       'cmd': command,
@@ -170,7 +185,7 @@ class MqttService {
 
   /// Publish raw message lên một topic bất kỳ.
   void _publish(String topic, String message) {
-    if (_connectionState != MqttConnectionState.connected) {
+    if (_connectionState != AppConnectionState.connected) {
       debugPrint('[MqttService] ⚠️ Chưa kết nối — không thể publish.');
       return;
     }
@@ -186,7 +201,7 @@ class MqttService {
 
   /// Lắng nghe tất cả messages đến và phân phối vào đúng Stream.
   void _listenForMessages() {
-    _client.updates?.listen((List<MqttReceivedMessage<MqttMessage>> messages) {
+    _updatesSubscription = _client.updates?.listen((List<MqttReceivedMessage<MqttMessage>> messages) {
       for (final message in messages) {
         final topic = message.topic;
         final payload = message.payload as MqttPublishMessage;
@@ -218,22 +233,22 @@ class MqttService {
 
   void _onConnected() {
     debugPrint('[MqttService] ✅ Callback: Connected');
-    _updateConnectionState(MqttConnectionState.connected);
+    _updateConnectionState(AppConnectionState.connected);
   }
 
   void _onDisconnected() {
     debugPrint('[MqttService] ❌ Callback: Disconnected');
-    _updateConnectionState(MqttConnectionState.disconnected);
+    _updateConnectionState(AppConnectionState.disconnected);
   }
 
   void _onAutoReconnect() {
     debugPrint('[MqttService] 🔄 Callback: Auto-reconnecting...');
-    _updateConnectionState(MqttConnectionState.connecting);
+    _updateConnectionState(AppConnectionState.connecting);
   }
 
   void _onAutoReconnected() {
     debugPrint('[MqttService] ✅ Callback: Auto-reconnected');
-    _updateConnectionState(MqttConnectionState.connected);
+    _updateConnectionState(AppConnectionState.connected);
   }
 
   void _onSubscribed(String topic) {
@@ -241,7 +256,7 @@ class MqttService {
   }
 
   /// Cập nhật trạng thái kết nối và phát lên Stream.
-  void _updateConnectionState(MqttConnectionState state) {
+  void _updateConnectionState(AppConnectionState state) {
     _connectionState = state;
     _connectionController.add(state);
   }
@@ -252,6 +267,7 @@ class MqttService {
 
   /// Đóng tất cả StreamControllers. Gọi khi App bị dispose.
   /// Tương đương với close() trong Java Closeable interface.
+  @override
   void dispose() {
     disconnect();
     _sensorController.close();

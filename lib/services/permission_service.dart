@@ -23,4 +23,29 @@ class PermissionService {
     }
     return result.isGranted;
   }
+
+  /// Yêu cầu quyền Bluetooth (Android 12+ cần BLUETOOTH_SCAN + BLUETOOTH_CONNECT).
+  static Future<bool> requestBluetoothPermissions() async {
+    final scanStatus = await Permission.bluetoothScan.status;
+    final connectStatus = await Permission.bluetoothConnect.status;
+
+    if (scanStatus.isGranted && connectStatus.isGranted) return true;
+
+    final results = await [
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+    ].request();
+
+    final allGranted = results.values.every((s) => s.isGranted);
+
+    if (!allGranted) {
+      // Kiểm tra nếu bị từ chối vĩnh viễn
+      final anyDenied = results.values.any((s) => s.isPermanentlyDenied);
+      if (anyDenied) {
+        await openAppSettings();
+      }
+    }
+
+    return allGranted;
+  }
 }

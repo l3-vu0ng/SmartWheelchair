@@ -1,52 +1,47 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:mqtt_client/mqtt_client.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 import '../models/sensor_data.dart';
 import '../models/wheelchair_status.dart';
+import '../services/ble_service.dart';
+import '../services/connection_service.dart';
 import '../services/mqtt_service.dart';
 
 /// ============================================================================
-/// [WheelchairProvider] — ChangeNotifier bridge giữa MqttService và UI
+/// [WheelchairProvider] — ChangeNotifier bridge giữa ConnectionService và UI
 /// ============================================================================
-/// Đây là lớp trung gian theo pattern Observer (tương đương ViewModel trong
+/// Lớp trung gian theo pattern Observer (tương đương ViewModel trong
 /// Android MVVM hoặc Controller trong MVC Java Swing).
 ///
-/// Hỗ trợ 2 chế độ:
-/// - **Live mode**: Kết nối MQTT Broker thật (dùng trên mobile/desktop)
-/// - **Demo mode**: Giả lập dữ liệu cảm biến (dùng để test UI trên web/emulator)
+/// Hỗ trợ 2 kênh kết nối thực tế:
+/// - **WiFi mode**: Kết nối MQTT Broker (HiveMQ Cloud) qua Internet.
+/// - **BLE mode**: Kết nối trực tiếp App ↔ ESP32 qua Bluetooth Low Energy.
 /// ============================================================================
 class WheelchairProvider extends ChangeNotifier {
-  final MqttService _mqttService;
+  // — Active connection service (WiFi hoặc BLE) —
+  ConnectionService? _activeConnection;
 
   // — State fields —
   SensorData? _sensorData;
   WheelchairStatus _status = WheelchairStatus.initial();
-  MqttConnectionState _connectionState = MqttConnectionState.disconnected;
+  AppConnectionState _connectionState = AppConnectionState.disconnected;
+  ConnectionType _connectionType = ConnectionType.none;
   String? _errorMessage;
   bool _isConnecting = false;
   bool _isFallen = false;
 
-  // — Demo mode —
-  bool _isDemoMode = false;
-  Timer? _demoTimer;
-  final Random _random = Random();
-
-  // — Stream subscriptions (cần cancel khi dispose) —
+  // — Stream subscriptions (cần cancel khi switch kết nối) —
   StreamSubscription<SensorData>? _sensorSub;
   StreamSubscription<WheelchairStatus>? _statusSub;
-  StreamSubscription<MqttConnectionState>? _connectionSub;
+  StreamSubscription<AppConnectionState>? _connectionSub;
 
   // ===========================================================================
-  // CONSTRUCTOR — Inject MqttService
+  // CONSTRUCTOR
   // ===========================================================================
 
-  WheelchairProvider({required MqttService mqttService})
-      : _mqttService = mqttService {
-    _listenToStreams();
-  }
+  WheelchairProvider();
 
   // ===========================================================================
   // PUBLIC GETTERS — UI truy cập state qua đây
@@ -58,14 +53,17 @@ class WheelchairProvider extends ChangeNotifier {
   /// Trạng thái thiết bị ESP32.
   WheelchairStatus get deviceStatus => _status;
 
-  /// Trạng thái kết nối MQTT của App.
-  MqttConnectionState get connectionState => _connectionState;
+  /// Trạng thái kết nối của App.
+  AppConnectionState get connectionState => _connectionState;
+
+  /// Loại kết nối hiện tại (WiFi / Bluetooth / None).
+  ConnectionType get connectionType => _connectionType;
 
   /// Đang trong quá trình kết nối hay không.
   bool get isConnecting => _isConnecting;
 
   /// Đã kết nối thành công hay chưa.
-  bool get isConnected => _connectionState == MqttConnectionState.connected;
+  bool get isConnected => _connectionState == AppConnectionState.connected;
 
   /// Thông báo lỗi (null nếu không có lỗi).
   String? get errorMessage => _errorMessage;
@@ -79,65 +77,96 @@ class WheelchairProvider extends ChangeNotifier {
   /// Thiết bị online hay không.
   bool get isDeviceOnline => _status.isOnline;
 
-  /// Đang ở chế độ demo hay không.
-  bool get isDemoMode => _isDemoMode;
-
   /// Cảnh báo ngã.
   bool get isFallen => _isFallen;
 
   // ===========================================================================
-  // ACTIONS — UI gọi các hàm này để thực hiện hành động
+  // ACTIONS — Kết nối WiFi (MQTT)
   // ===========================================================================
 
-  /// Kết nối tới MQTT Broker (live mode).
-  Future<void> connectToBroker() async {
+  /// Kết nối tới MQTT Broker qua WiFi.
+  Future<void> connectViaMqtt() async {
+    // Ngắt kết nối cũ nếu có
+    _disconnectCurrent();
+
     _isConnecting = true;
     _errorMessage = null;
+    _connectionType = ConnectionType.wifi;
     notifyListeners();
 
-    final success = await _mqttService.connect();
+    final mqttService = MqttService();
+    _activeConnection = mqttService;
+    _listenToStreams(mqttService);
+
+    final success = await mqttService.connect();
 
     _isConnecting = false;
     if (!success) {
-      _errorMessage = 'Không thể kết nối MQTT Broker. Kiểm tra mạng.';
+      _errorMessage = 'Không thể kết nối MQTT Broker. Kiểm tra mạng WiFi.';
+      _connectionType = ConnectionType.none;
+      _sensorSub?.cancel();
+      _statusSub?.cancel();
+      _connectionSub?.cancel();
+      mqttService.dispose();
+      _activeConnection = null;
     }
     notifyListeners();
   }
 
-  /// Ngắt kết nối.
-  void disconnectFromBroker() {
-    if (_isDemoMode) {
-      _stopDemoMode();
-    } else {
-      _mqttService.disconnect();
+  // ===========================================================================
+  // ACTIONS — Kết nối BLE (Bluetooth)
+  // ===========================================================================
+
+  /// Kết nối tới thiết bị ESP32 qua Bluetooth Low Energy.
+  Future<void> connectViaBle(BluetoothDevice device) async {
+    // Ngắt kết nối cũ nếu có
+    _disconnectCurrent();
+
+    _isConnecting = true;
+    _errorMessage = null;
+    _connectionType = ConnectionType.bluetooth;
+    notifyListeners();
+
+    final bleService = BleService();
+    bleService.setDevice(device);
+    _activeConnection = bleService;
+    _listenToStreams(bleService);
+
+    final success = await bleService.connect();
+
+    _isConnecting = false;
+    if (!success) {
+      _errorMessage =
+          'Không thể kết nối Bluetooth. Kiểm tra thiết bị có bật BLE.';
+      _connectionType = ConnectionType.none;
+      _sensorSub?.cancel();
+      _statusSub?.cancel();
+      _connectionSub?.cancel();
+      bleService.dispose();
+      _activeConnection = null;
     }
+    notifyListeners();
+  }
+
+  // ===========================================================================
+  // ACTIONS — Ngắt kết nối
+  // ===========================================================================
+
+  /// Ngắt kết nối hiện tại (bất kể WiFi hay BLE).
+  void disconnectAll() {
+    _disconnectCurrent();
     _sensorData = null;
     _status = WheelchairStatus.initial();
-    _connectionState = MqttConnectionState.disconnected;
+    _connectionState = AppConnectionState.disconnected;
+    _connectionType = ConnectionType.none;
     notifyListeners();
   }
 
-  /// Bật chế độ Demo — giả lập dữ liệu cảm biến để test UI.
-  /// Hữu ích khi chạy trên web/emulator không có MQTT.
-  void startDemoMode() {
-    _isDemoMode = true;
-    _connectionState = MqttConnectionState.connected;
-    _status = WheelchairStatus(
-      isOnline: true,
-      connectionState: 'connected (demo)',
-      lastSeen: DateTime.now(),
-    );
-    notifyListeners();
+  // ===========================================================================
+  // ACTIONS — Gửi lệnh điều khiển
+  // ===========================================================================
 
-    // Phát dữ liệu giả lập mỗi 800ms
-    _demoTimer = Timer.periodic(const Duration(milliseconds: 800), (_) {
-      _generateMockSensorData();
-    });
-
-    debugPrint('[Demo] 🎭 Chế độ demo đã bật — dữ liệu giả lập.');
-  }
-
-  /// Gửi lệnh điều khiển xe lăn.
+  /// Gửi lệnh điều khiển xe lăn qua kênh đang kết nối.
   void sendCommand(String direction, {int speed = 200}) {
     if (!isConnected) {
       _errorMessage = 'Chưa kết nối — không thể gửi lệnh.';
@@ -145,12 +174,7 @@ class WheelchairProvider extends ChangeNotifier {
       return;
     }
 
-    if (_isDemoMode) {
-      debugPrint('[Demo] 🎮 Lệnh: $direction | Tốc độ: $speed');
-      return; // Demo mode không gửi MQTT thật
-    }
-
-    _mqttService.sendCommand(direction, speed: speed);
+    _activeConnection?.sendCommand(direction, speed: speed);
   }
 
   /// Xóa thông báo lỗi.
@@ -159,7 +183,7 @@ class WheelchairProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Mô phỏng sự kiện ngã.
+  /// Mô phỏng sự kiện ngã (dùng cho test).
   void triggerFallDetectionTest() {
     _isFallen = true;
     notifyListeners();
@@ -172,53 +196,38 @@ class WheelchairProvider extends ChangeNotifier {
   }
 
   // ===========================================================================
-  // PRIVATE — Demo Mode Data Generator
+  // PRIVATE — Quản lý kết nối
   // ===========================================================================
 
-  /// Tạo dữ liệu cảm biến giả lập thay đổi tự nhiên.
-  void _generateMockSensorData() {
-    // Khoảng cách dao động 10-200cm với biến thiên nhỏ
-    final baseDistance = _sensorData?.obstacleDistance ?? 100.0;
-    final variation = (_random.nextDouble() - 0.5) * 20; // ±10cm
-    final newDistance = (baseDistance + variation).clamp(5.0, 200.0);
-
-    // Pin giảm dần chậm (giả lập)
-    final baseBattery = _sensorData?.batteryLevel ?? 85.0;
-    final newBattery = (baseBattery - _random.nextDouble() * 0.1).clamp(10.0, 100.0);
-
-    _sensorData = SensorData(
-      obstacleDistance: double.parse(newDistance.toStringAsFixed(1)),
-      batteryLevel: double.parse(newBattery.toStringAsFixed(1)),
-      timestamp: DateTime.now(),
-    );
-    notifyListeners();
+  /// Ngắt kết nối hiện tại và cancel stream subscriptions.
+  void _disconnectCurrent() {
+    _sensorSub?.cancel();
+    _statusSub?.cancel();
+    _connectionSub?.cancel();
+    _activeConnection?.dispose();
+    _activeConnection = null;
   }
 
-  /// Dừng chế độ demo.
-  void _stopDemoMode() {
-    _demoTimer?.cancel();
-    _demoTimer = null;
-    _isDemoMode = false;
-    debugPrint('[Demo] 🎭 Chế độ demo đã tắt.');
-  }
-
-  // ===========================================================================
-  // PRIVATE — Lắng nghe Streams từ MqttService
-  // ===========================================================================
-
-  void _listenToStreams() {
-    _sensorSub = _mqttService.sensorStream.listen((data) {
+  /// Lắng nghe Streams từ ConnectionService.
+  void _listenToStreams(ConnectionService service) {
+    _sensorSub = service.sensorStream.listen((data) {
       _sensorData = data;
       notifyListeners();
     });
 
-    _statusSub = _mqttService.statusStream.listen((status) {
+    _statusSub = service.statusStream.listen((status) {
       _status = status;
       notifyListeners();
     });
 
-    _connectionSub = _mqttService.connectionStream.listen((state) {
+    _connectionSub = service.connectionStream.listen((state) {
       _connectionState = state;
+
+      // Nếu mất kết nối bất ngờ → reset connection type
+      if (state == AppConnectionState.disconnected) {
+        _connectionType = ConnectionType.none;
+        _activeConnection = null;
+      }
       notifyListeners();
     });
   }
@@ -229,11 +238,7 @@ class WheelchairProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _demoTimer?.cancel();
-    _sensorSub?.cancel();
-    _statusSub?.cancel();
-    _connectionSub?.cancel();
-    _mqttService.dispose();
+    _disconnectCurrent();
     super.dispose();
   }
 }

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "419079276300",
+    "project_id": "vpc-smartwheelchair",
+    "storage_bucket": "vpc-smartwheelchair.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:419079276300:android:ec50d323813bba1939ab29",
+        "android_client_info": {
+          "package_name": "vn.edu.hcmute.vpc.smartwheelchair"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "419079276300-ve0dgaha9c5eo1el1fr805o8pe8t0d06.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "vn.edu.hcmute.vpc.smartwheelchair",
+            "certificate_hash": "eeebfc7bb85fb5e862bce82e1af89f5577c9082e"
+          }
+        },
+        {
+          "client_id": "419079276300-ockf3bas0ils0dbmeclnl9pitahplm7k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9IGOycIwESRIWENZbdKA92HHkTz4E3qY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "419079276300-ockf3bas0ils0dbmeclnl9pitahplm7k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../config/app_theme.dart';
+import '../../services/database_service.dart';
+import '../../models/user_model.dart';
 
 /// ============================================================================
 /// [SettingsTab] — Hồ sơ & Cài đặt
@@ -19,11 +22,12 @@ class _SettingsTabState extends State<SettingsTab> {
   bool _notifyGeneral = true;
   bool _notifyFall = true;
   bool _notifyHeartRate = true;
-  bool _autoSpeed = false;
+
   bool _darkMode = false;
   bool _hapticFeedback = true;
 
   // Profile state
+  bool _isLoadingProfile = true;
   String _name = 'Nguyễn Văn An';
   int _age = 32;
   String _emergencyPhone = '0912345678';
@@ -40,14 +44,29 @@ class _SettingsTabState extends State<SettingsTab> {
       _notifyGeneral = prefs.getBool('notifyGeneral') ?? true;
       _notifyFall = prefs.getBool('notifyFall') ?? true;
       _notifyHeartRate = prefs.getBool('notifyHeartRate') ?? true;
-      _autoSpeed = prefs.getBool('autoSpeed') ?? false;
-      _darkMode = prefs.getBool('darkMode') ?? false;
-      _hapticFeedback = prefs.getBool('hapticFeedback') ?? true;
 
-      _name = prefs.getString('profileName') ?? 'Nguyễn Văn An';
-      _age = prefs.getInt('profileAge') ?? 32;
-      _emergencyPhone = prefs.getString('emergencyPhone') ?? '0912 345 678';
+      _hapticFeedback = prefs.getBool('hapticFeedback') ?? true;
     });
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      final db = DatabaseService();
+      final userModel = await db.getUser(uid);
+      if (userModel != null) {
+        if (mounted) {
+          setState(() {
+            _name = userModel.displayName.isNotEmpty ? userModel.displayName : 'Nguyễn Văn An';
+            _age = userModel.age ?? 32;
+            _emergencyPhone = userModel.emergencyPhone ?? '0912 345 678';
+          });
+        }
+      }
+    }
+    if (mounted) {
+      setState(() {
+        _isLoadingProfile = false;
+      });
+    }
   }
 
   Future<void> _saveBool(String key, bool value) async {
@@ -56,10 +75,26 @@ class _SettingsTabState extends State<SettingsTab> {
   }
 
   Future<void> _saveProfile(String name, int age, String phone) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('profileName', name);
-    await prefs.setInt('profileAge', age);
-    await prefs.setString('emergencyPhone', phone);
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      final db = DatabaseService();
+      UserModel? userModel = await db.getUser(uid);
+      if (userModel != null) {
+        userModel = userModel.copyWith(displayName: name, age: age, emergencyPhone: phone);
+      } else {
+        final email = FirebaseAuth.instance.currentUser?.email ?? '';
+        userModel = UserModel(
+          uid: uid,
+          email: email,
+          displayName: name,
+          age: age,
+          emergencyPhone: phone,
+          createdAt: DateTime.now(),
+          lastLoginAt: DateTime.now(),
+        );
+      }
+      await db.saveUser(userModel);
+    }
     setState(() {
       _name = name;
       _age = age;
@@ -151,7 +186,9 @@ class _SettingsTabState extends State<SettingsTab> {
             // Profile card
             GestureDetector(
               onTap: _showEditProfileDialog,
-              child: _ProfileCard(name: _name, age: _age, phone: _emergencyPhone),
+              child: _isLoadingProfile 
+                  ? const Center(child: CircularProgressIndicator())
+                  : _ProfileCard(name: _name, age: _age, phone: _emergencyPhone),
             ),
             const SizedBox(height: AppTheme.spacingLg),
 
@@ -192,31 +229,15 @@ class _SettingsTabState extends State<SettingsTab> {
             ),
             const SizedBox(height: AppTheme.spacingLg),
 
-            // Control section
-            const _SectionHeader(icon: Icons.settings_remote_rounded, label: 'ĐIỀU KHIỂN'),
-            const SizedBox(height: AppTheme.spacingSm),
-            _SettingsGroup(
-              children: [
-                _ToggleTile(
-                  title: 'Tốc độ tự động',
-                  subtitle: 'Tự điều chỉnh theo địa hình',
-                  value: _autoSpeed,
-                  onChanged: (v) {
-                    setState(() => _autoSpeed = v);
-                    _saveBool('autoSpeed', v);
-                  },
-                  isLast: true,
-                ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.spacingLg),
+
 
             // UI section
             const _SectionHeader(icon: Icons.palette_outlined, label: 'GIAO DIỆN'),
             const SizedBox(height: AppTheme.spacingSm),
             _SettingsGroup(
               children: [
-                _ToggleTile(
+                // TODO: Bật lại tính năng chế độ tối sau khi thiết kế xong
+                /*_ToggleTile(
                   title: 'Chế độ tối',
                   subtitle: 'Giao diện tối cho ban đêm',
                   value: _darkMode,
@@ -224,7 +245,7 @@ class _SettingsTabState extends State<SettingsTab> {
                     setState(() => _darkMode = v);
                     _saveBool('darkMode', v);
                   },
-                ),
+                ),*/
                 _ToggleTile(
                   title: 'Rung phản hồi',
                   subtitle: 'Rung khi nhấn nút',

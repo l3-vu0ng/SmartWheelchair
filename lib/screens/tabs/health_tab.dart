@@ -143,7 +143,7 @@ class _FallDetectionBanner extends StatelessWidget {
 }
 
 // =============================================================================
-// HEART RATE CARD (with mock chart)
+// HEART RATE CARD
 // =============================================================================
 class _HeartRateCard extends StatelessWidget {
   const _HeartRateCard();
@@ -172,11 +172,11 @@ class _HeartRateCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Nhịp tim', style: AppTheme.labelBold),
-                    Text('Đo liên tục', style: AppTheme.caption),
+                    Text('Đang chờ dữ liệu...', style: AppTheme.caption),
                   ],
                 ),
               ),
-              Text('72', style: AppTheme.valueLg),
+              Text('--', style: AppTheme.valueLg),
               const SizedBox(width: 4),
               Text('bpm', style: AppTheme.bodySm),
             ],
@@ -189,18 +189,18 @@ class _HeartRateCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: AppTheme.statusOnline.withValues(alpha: 0.1),
+                color: AppTheme.textSecondary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppTheme.radiusPill),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.check_circle, size: 14, color: AppTheme.statusOnline),
+                  const Icon(Icons.sensors_off_rounded, size: 14, color: AppTheme.textSecondary),
                   const SizedBox(width: 4),
                   Text(
-                    'Nhịp tim bình thường',
+                    'Chưa kết nối cảm biến nhịp tim',
                     style: AppTheme.caption.copyWith(
-                      color: AppTheme.statusOnline,
+                      color: AppTheme.textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -208,72 +208,10 @@ class _HeartRateCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: AppTheme.spacingMd),
-
-          // Mock chart
-          SizedBox(
-            height: 100,
-            child: CustomPaint(
-              size: const Size(double.infinity, 100),
-              painter: _HeartRateChartPainter(),
-            ),
-          ),
-
-          // Time labels
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(':00', style: AppTheme.caption),
-                Text('12:00', style: AppTheme.caption),
-                Text('16:00', style: AppTheme.caption),
-              ],
-            ),
-          ),
         ],
       ),
     );
   }
-}
-
-class _HeartRateChartPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppTheme.primaryBlue
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path();
-    path.moveTo(0, size.height * 0.6);
-    path.cubicTo(
-      size.width * 0.1, size.height * 0.4,
-      size.width * 0.15, size.height * 0.3,
-      size.width * 0.2, size.height * 0.5,
-    );
-    path.cubicTo(
-      size.width * 0.3, size.height * 0.7,
-      size.width * 0.35, size.height * 0.2,
-      size.width * 0.45, size.height * 0.35,
-    );
-    path.cubicTo(
-      size.width * 0.55, size.height * 0.5,
-      size.width * 0.6, size.height * 0.3,
-      size.width * 0.7, size.height * 0.4,
-    );
-    path.cubicTo(
-      size.width * 0.8, size.height * 0.5,
-      size.width * 0.85, size.height * 0.45,
-      size.width, size.height * 0.55,
-    );
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // =============================================================================
@@ -290,7 +228,7 @@ class _HealthStatsRow extends StatelessWidget {
           child: _MiniStatCard(
             icon: Icons.directions_walk_rounded,
             iconColor: AppTheme.primaryBlue,
-            value: '2.4',
+            value: '--',
             unit: 'km',
             label: 'Quãng đường',
           ),
@@ -300,7 +238,7 @@ class _HealthStatsRow extends StatelessWidget {
           child: _MiniStatCard(
             icon: Icons.favorite_rounded,
             iconColor: const Color(0xFFFF6B6B),
-            value: '74',
+            value: '--',
             unit: 'bpm',
             label: 'Nhịp tim TB',
           ),
@@ -309,6 +247,7 @@ class _HealthStatsRow extends StatelessWidget {
     );
   }
 }
+
 
 class _MiniStatCard extends StatelessWidget {
   final IconData icon;

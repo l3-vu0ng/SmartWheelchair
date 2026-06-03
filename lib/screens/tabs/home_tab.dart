@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../config/app_theme.dart';
 import '../../providers/wheelchair_provider.dart';
+import '../../services/connection_service.dart';
+import '../../widgets/connection_dialog.dart';
 
 /// ============================================================================
 /// [HomeTab] — Trang chủ Dashboard
@@ -11,7 +13,9 @@ import '../../providers/wheelchair_provider.dart';
 /// và Quick Access shortcuts.
 /// ============================================================================
 class HomeTab extends StatelessWidget {
-  const HomeTab({super.key});
+  final ValueChanged<int>? onNavigate;
+
+  const HomeTab({super.key, this.onNavigate});
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +42,7 @@ class HomeTab extends StatelessWidget {
                 // --- Quick Access ---
                 Text('TRUY CẬP NHANH', style: AppTheme.sectionLabel),
                 const SizedBox(height: AppTheme.spacingSm),
-                const _QuickAccessList(),
+                _QuickAccessList(onNavigate: onNavigate),
               ],
             ),
           ),
@@ -68,13 +72,13 @@ class _HomeHeader extends StatelessWidget {
             ],
           ),
         ),
-        // Connection indicator
+        // Connection indicator — nhấn vào để chọn kết nối WiFi/BLE
         GestureDetector(
           onTap: () {
             if (provider.isConnected) {
-              provider.disconnectFromBroker();
-            } else if (!provider.isDemoMode) {
-              provider.startDemoMode();
+              provider.disconnectAll();
+            } else {
+              ConnectionDialog.show(context);
             }
           },
           child: Container(
@@ -94,7 +98,7 @@ class _HomeHeader extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.wifi_rounded,
+                  _connectionIcon(provider),
                   size: 16,
                   color: provider.isConnected
                       ? AppTheme.statusOnline
@@ -102,7 +106,7 @@ class _HomeHeader extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  provider.isConnected ? 'Đã kết nối' : 'Demo',
+                  _connectionLabel(provider),
                   style: AppTheme.caption.copyWith(
                     color: provider.isConnected
                         ? AppTheme.statusOnline
@@ -116,6 +120,23 @@ class _HomeHeader extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// Icon dựa trên loại kết nối hiện tại.
+  IconData _connectionIcon(WheelchairProvider provider) {
+    if (!provider.isConnected) return Icons.link_off_rounded;
+    return provider.connectionType == ConnectionType.bluetooth
+        ? Icons.bluetooth_connected_rounded
+        : Icons.wifi_rounded;
+  }
+
+  /// Label text dựa trên trạng thái kết nối.
+  String _connectionLabel(WheelchairProvider provider) {
+    if (provider.isConnecting) return 'Đang kết nối...';
+    if (!provider.isConnected) return 'Kết nối';
+    return provider.connectionType == ConnectionType.bluetooth
+        ? 'BLE'
+        : 'WiFi';
   }
 }
 
@@ -310,7 +331,7 @@ class _StatCardsRow extends StatelessWidget {
             iconColor: const Color(0xFFFF6B6B),
             iconBgColor: const Color(0xFFFFEBEB),
             label: 'Nhịp tim',
-            value: provider.isConnected ? '72' : '--',
+            value: '--',
             unit: 'bpm',
           ),
         ),
@@ -387,7 +408,9 @@ class _StatCard extends StatelessWidget {
 // QUICK ACCESS LIST
 // =============================================================================
 class _QuickAccessList extends StatelessWidget {
-  const _QuickAccessList();
+  final ValueChanged<int>? onNavigate;
+
+  const _QuickAccessList({this.onNavigate});
 
   @override
   Widget build(BuildContext context) {
@@ -398,6 +421,7 @@ class _QuickAccessList extends StatelessWidget {
           iconColor: AppTheme.primaryBlue,
           title: 'Điều khiển xe lăn',
           subtitle: 'Joystick & giọng nói',
+          onTap: () => onNavigate?.call(1),
         ),
         const SizedBox(height: AppTheme.spacingXs),
         _QuickAccessTile(
@@ -405,6 +429,7 @@ class _QuickAccessList extends StatelessWidget {
           iconColor: const Color(0xFFFF6B6B),
           title: 'Theo dõi sức khỏe',
           subtitle: 'Nhịp tim, cảnh báo ngã',
+          onTap: () => onNavigate?.call(2),
         ),
         const SizedBox(height: AppTheme.spacingXs),
         _QuickAccessTile(
@@ -412,6 +437,7 @@ class _QuickAccessList extends StatelessWidget {
           iconColor: AppTheme.primaryBlue,
           title: 'Điều hướng',
           subtitle: 'Tìm lối đi phù hợp',
+          onTap: () => onNavigate?.call(3),
         ),
       ],
     );
@@ -423,41 +449,47 @@ class _QuickAccessTile extends StatelessWidget {
   final Color iconColor;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   const _QuickAccessTile({
     required this.icon,
     required this.iconColor,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacingMd),
-      decoration: AppTheme.cardDecoration,
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.spacingMd),
+        decoration: AppTheme.cardDecoration,
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 20, color: iconColor),
             ),
-            child: Icon(icon, size: 20, color: iconColor),
-          ),
-          const SizedBox(width: AppTheme.spacingSm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: AppTheme.labelBold),
-                Text(subtitle, style: AppTheme.bodySm),
-              ],
+            const SizedBox(width: AppTheme.spacingSm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: AppTheme.labelBold),
+                  Text(subtitle, style: AppTheme.bodySm),
+                ],
+              ),
             ),
-          ),
-          Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
-        ],
+            Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
+          ],
+        ),
       ),
     );
   }
