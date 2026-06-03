@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../config/app_theme.dart';
 import '../../providers/wheelchair_provider.dart';
@@ -21,16 +22,27 @@ class ControlTab extends StatefulWidget {
 class _ControlTabState extends State<ControlTab> {
   String _currentDirection = 'stop';
   double _maxSpeed = 2.0; // km/h
+  bool _hapticEnabled = true;
   WheelchairProvider? _providerRef;
 
   @override
   void initState() {
     super.initState();
+    _loadSettings();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _providerRef = context.read<WheelchairProvider>();
       _providerRef?.addListener(_onProviderChange);
     });
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _hapticEnabled = prefs.getBool('hapticFeedback') ?? true;
+      });
+    }
   }
 
   void _onProviderChange() {
@@ -68,6 +80,7 @@ class _ControlTabState extends State<ControlTab> {
         builder: (ctx) => _FullScreenControlScreen(
           provider: provider,
           maxSpeed: _maxSpeed,
+          hapticEnabled: _hapticEnabled,
           onSpeedChanged: (val) {
             setState(() {
               _maxSpeed = val;
@@ -103,7 +116,7 @@ class _ControlTabState extends State<ControlTab> {
                     setState(() => _currentDirection = dir);
                     int pwm = (_maxSpeed / 6.0 * 255).toInt();
                     provider.sendCommand(dir, speed: pwm);
-                    HapticFeedback.lightImpact();
+                    if (_hapticEnabled) HapticFeedback.lightImpact();
                   },
                   onFullScreenTap: () => _showFullScreenControl(context, provider),
                 ),
@@ -475,11 +488,13 @@ class _SpeedControlCard extends StatelessWidget {
 class _FullScreenControlScreen extends StatefulWidget {
   final WheelchairProvider provider;
   final double maxSpeed;
+  final bool hapticEnabled;
   final ValueChanged<double> onSpeedChanged;
 
   const _FullScreenControlScreen({
     required this.provider,
     required this.maxSpeed,
+    required this.hapticEnabled,
     required this.onSpeedChanged,
   });
 
@@ -516,7 +531,7 @@ class _FullScreenControlScreenState extends State<_FullScreenControlScreen> {
     setState(() => _currentDirection = dir);
     int pwm = (_localSpeed / 6.0 * 255).toInt();
     widget.provider.sendCommand(dir, speed: pwm);
-    HapticFeedback.lightImpact();
+    if (widget.hapticEnabled) HapticFeedback.lightImpact();
   }
 
   @override

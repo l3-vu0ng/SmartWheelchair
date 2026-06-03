@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../config/app_theme.dart';
 import '../providers/wheelchair_provider.dart';
 import '../services/permission_service.dart';
+import '../services/notification_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'tabs/home_tab.dart';
 import 'tabs/control_tab.dart';
@@ -50,16 +52,46 @@ class _MainScreenState extends State<MainScreen> {
     // Check fall detection
     if (_providerRef!.isFallen && !_isShowingFallDialog) {
       _isShowingFallDialog = true;
-      _showFallDialog();
+      _triggerFallAlert();
     }
 
     // Check low battery
     if (_providerRef!.sensorData?.isLowBattery == true && !_hasShownLowBatteryWarning) {
       _hasShownLowBatteryWarning = true;
-      _showLowBatteryDialog();
+      _triggerLowBatteryAlert();
     } else if (_providerRef!.sensorData != null && !_providerRef!.sensorData!.isLowBattery) {
       _hasShownLowBatteryWarning = false;
     }
+  }
+
+  Future<void> _triggerFallAlert() async {
+    final prefs = await SharedPreferences.getInstance();
+    final notifyFall = prefs.getBool('notifyFall') ?? true;
+    
+    if (notifyFall) {
+      NotificationService().showNotification(
+        id: 1,
+        title: 'CẢNH BÁO NGÃ!',
+        body: 'Hệ thống phát hiện xe lăn có thể đã bị lật. Vui lòng kiểm tra ngay!',
+      );
+    }
+    
+    if (mounted) _showFallDialog();
+  }
+
+  Future<void> _triggerLowBatteryAlert() async {
+    final prefs = await SharedPreferences.getInstance();
+    final notifyGeneral = prefs.getBool('notifyGeneral') ?? true;
+    
+    if (notifyGeneral) {
+      NotificationService().showNotification(
+        id: 2,
+        title: 'Pin yếu!',
+        body: 'Dung lượng pin xe lăn đang ở mức thấp. Vui lòng sạc điện.',
+      );
+    }
+    
+    if (mounted) _showLowBatteryDialog();
   }
 
   void _showFallDialog() {

@@ -18,11 +18,11 @@ Hệ thống cho phép người dùng hoặc người thân điều khiển xe l
 
 ## 👥 2. Thành viên nhóm
 
-| STT | Họ và Tên | MSSV |
-|:---:|---|---|
-| 1 | Võ Lê Vương | 24110391 |
-| 2 | Nguyễn Đức Phát | 24110296 |
-| 3 | Nông Văn Cường | 24110176 |
+|  STT  | Họ và Tên       | MSSV     |
+| :---: | --------------- | -------- |
+|   1   | Võ Lê Vương     | 24110391 |
+|   2   | Nguyễn Đức Phát | 24110296 |
+|   3   | Nông Văn Cường  | 24110176 |
 
 ## 🛠 3. Công nghệ và Linh kiện sử dụng
 
@@ -91,4 +91,4 @@ flowchart TD
 - **Cảnh báo té ngã**: Phân tích góc nghiêng và gia tốc từ MPU6050, kích hoạt thông báo cảnh báo khi xe có dấu hiệu bị lật hoặc người dùng té ngã.
 - **Theo dõi sinh hiệu (Health Monitoring)**: Liên tục đo nhịp tim và nồng độ oxy trong máu (SpO2) qua MAX30102, hiển thị trực tiếp lên màn hình LCD I2C và gửi về ứng dụng di động.
 - **Kết nối kép WiFi + Bluetooth (BLE)**: Hỗ trợ hai phương thức kết nối — WiFi (MQTT qua HiveMQ Cloud) và Bluetooth Low Energy (BLE trực tiếp). Người dùng linh hoạt chọn phương thức kết nối phù hợp.
-- **[Sắp ra mắt] Đăng nhập & Lưu trữ đám mây**: Hỗ trợ đăng nhập Google và lưu trữ dữ liệu cá nhân hóa người dùng. Đang đồng bộ hóa hồ sơ với Firestore thay vì bộ nhớ tạm. Xem thêm tại [`TONGQUAN.md`](./docs/human/TONGQUAN.md).
+- **Đăng nhập & Lưu trữ đám mây**: Hỗ trợ đăng nhập Google và lưu trữ dữ liệu cá nhân hóa người dùng. Đang đồng bộ hóa hồ sơ với Firestore thay vì bộ nhớ tạm. Xem thêm tại [`TONGQUAN.md`](./docs/human/TONGQUAN.md).

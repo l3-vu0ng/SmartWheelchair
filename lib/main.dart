@@ -9,6 +9,7 @@ import 'providers/wheelchair_provider.dart';
 import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
+import 'services/notification_service.dart';
 import 'firebase_options.dart';
 
 /// ============================================================================
@@ -18,6 +19,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   try {
+    // Khởi tạo Notification
+    await NotificationService().init();
+
     await dotenv.load(fileName: ".env");
     
     // Khởi tạo Firebase
