@@ -161,13 +161,13 @@ class _NavigationTabState extends State<NavigationTab> {
                         ),
                       );
                     },
-                    child: const Icon(Icons.my_location_rounded, color: AppTheme.primaryBlue),
+                    child: const Icon(Icons.my_location_rounded, color: AppTheme.tealSignal),
                   ),
                   const SizedBox(height: 16),
                   // Nút Tìm đường
                   FloatingActionButton.extended(
                     heroTag: 'routeBtn',
-                    backgroundColor: AppTheme.primaryBlue,
+                    backgroundColor: AppTheme.tealSignal,
                     icon: const Icon(Icons.directions_rounded, color: AppTheme.canvasWhite),
                     label: Text('Tìm đường', style: AppTheme.labelBold.copyWith(color: AppTheme.canvasWhite)),
                     onPressed: () => _launchGoogleMaps(wheelchairLat, wheelchairLng),

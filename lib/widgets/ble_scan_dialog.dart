@@ -194,7 +194,7 @@ class _BleScanDialogContentState extends State<_BleScanDialogContent> {
       return _buildMessageState(
         icon: Icons.bluetooth_searching_rounded,
         message: 'Đang tìm kiếm thiết bị...',
-        color: AppTheme.primaryBlue,
+        color: AppTheme.tealSignal,
       );
     }
 

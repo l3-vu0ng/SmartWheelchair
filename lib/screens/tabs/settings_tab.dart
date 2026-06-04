@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -6,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../config/app_theme.dart';
 import '../../services/database_service.dart';
 import '../../models/user_model.dart';
+import '../../main.dart'; // Add import for AuthWrapper
 
 /// ============================================================================
 /// [SettingsTab] — Hồ sơ & Cài đặt
@@ -23,7 +26,6 @@ class _SettingsTabState extends State<SettingsTab> {
   bool _notifyFall = true;
   bool _notifyHeartRate = true;
 
-  bool _darkMode = false;
   bool _hapticFeedback = true;
 
   // Profile state
@@ -153,7 +155,7 @@ class _SettingsTabState extends State<SettingsTab> {
             child: const Text('Hủy'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.tealSignal),
             onPressed: () {
               final newAge = int.tryParse(ageController.text.trim()) ?? _age;
               _saveProfile(
@@ -322,6 +324,32 @@ class _SettingsTabState extends State<SettingsTab> {
               ),
             ),
             const SizedBox(height: AppTheme.spacingLg),
+
+            // Logout button
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  await FirebaseAuth.instance.signOut();
+                  if (context.mounted) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (_) => const AuthWrapper(),
+                      ),
+                      (route) => false,
+                    );
+                  }
+                },
+                icon: const Icon(Icons.logout_rounded, color: AppTheme.statusOffline),
+                label: const Text('Đăng xuất', style: TextStyle(color: AppTheme.statusOffline)),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppTheme.statusOffline),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLg)),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppTheme.spacingLg),
           ],
         ),
       ),
@@ -347,14 +375,24 @@ class _ProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppTheme.spacingLg),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppTheme.primaryBlue, AppTheme.primaryBlueDark],
+          colors: [AppTheme.tealSignal, AppTheme.tealDeep],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+      padding: const EdgeInsets.all(AppTheme.spacingLg),
+      decoration: BoxDecoration(
+        color: AppTheme.glassSurface.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+        border: Border.all(color: AppTheme.glassBorder, width: 1),
       ),
       child: Column(
         children: [
@@ -463,6 +501,9 @@ class _ProfileCard extends StatelessWidget {
           ),
         ],
       ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -547,7 +588,7 @@ class _ToggleTile extends StatelessWidget {
               Switch(
                 value: value,
                 onChanged: onChanged,
-                activeTrackColor: AppTheme.primaryBlue,
+                activeTrackColor: AppTheme.tealSignal,
               ),
             ],
           ),

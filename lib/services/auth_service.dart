@@ -69,6 +69,59 @@ class AuthService {
     }
   }
 
+  /// Đăng ký bằng Số điện thoại + Mật khẩu
+  Future<User?> registerWithPhoneAndPassword(String phone, String password) async {
+    try {
+      final String email = "$phone@smartwheel.com";
+      final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final User? user = userCredential.user;
+      
+      if (user != null) {
+        UserModel userModel = UserModel(
+          uid: user.uid,
+          email: phone, // Hiển thị số điện thoại thay vì email ảo
+          displayName: 'Người dùng',
+          createdAt: DateTime.now(),
+          lastLoginAt: DateTime.now(),
+        );
+        await _dbService.saveUser(userModel);
+      }
+      return user;
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Lỗi xác thực: ${e.message} (Mã lỗi: ${e.code})');
+    } catch (e) {
+      throw Exception('Lỗi không xác định: $e');
+    }
+  }
+
+  /// Đăng nhập bằng Số điện thoại + Mật khẩu
+  Future<User?> signInWithPhoneAndPassword(String phone, String password) async {
+    try {
+      final String email = "$phone@smartwheel.com";
+      final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final User? user = userCredential.user;
+      
+      if (user != null) {
+        UserModel? existingUser = await _dbService.getUser(user.uid);
+        if (existingUser != null) {
+          existingUser = existingUser.copyWith(lastLoginAt: DateTime.now());
+          await _dbService.saveUser(existingUser);
+        }
+      }
+      return user;
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Lỗi xác thực: ${e.message} (Mã lỗi: ${e.code})');
+    } catch (e) {
+      throw Exception('Lỗi không xác định: $e');
+    }
+  }
+
   /// Đăng xuất
   Future<void> signOut() async {
     try {

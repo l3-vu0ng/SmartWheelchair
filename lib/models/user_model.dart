@@ -56,6 +56,7 @@ class UserModel {
     String? displayName,
     int? age,
     String? emergencyPhone,
+    DateTime? lastLoginAt,
   }) {
     return UserModel(
       uid: uid,
@@ -63,7 +64,7 @@ class UserModel {
       displayName: displayName ?? this.displayName,
       photoUrl: photoUrl,
       createdAt: createdAt,
-      lastLoginAt: lastLoginAt,
+      lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       age: age ?? this.age,
       emergencyPhone: emergencyPhone ?? this.emergencyPhone,
     );

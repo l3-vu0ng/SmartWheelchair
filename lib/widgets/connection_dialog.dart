@@ -59,7 +59,7 @@ class ConnectionDialog {
             // WiFi Option
             _ConnectionOption(
               icon: Icons.wifi_rounded,
-              iconColor: AppTheme.primaryBlue,
+              iconColor: AppTheme.tealSignal,
               title: 'WiFi (MQTT)',
               subtitle: 'Kết nối qua Internet · HiveMQ Cloud',
               isActive: provider.connectionType == ConnectionType.wifi,

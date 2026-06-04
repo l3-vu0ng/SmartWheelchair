@@ -33,18 +33,15 @@ MQTT_USERNAME=test_user
 MQTT_PASSWORD=test_pass
 ''');
 
-    final fakeUser = FakeUser();
-
-    // Xây dựng app và render frame đầu tiên, truyền fake user stream
+    // Xây dựng app với User = null (Chưa đăng nhập)
     await tester.pumpWidget(SmartWheelchairApp(
-      authStream: Stream<User?>.value(fakeUser),
+      authStream: Stream<User?>.value(null),
     ));
 
-    // Đợi render xong vì Stream.value phát ra bất đồng bộ ở frame tiếp theo
+    // Đợi render xong
     await tester.pump();
 
-    // Xác nhận một số Text xuất hiện trên thanh điều hướng bên dưới.
-    expect(find.text('Trang chủ'), findsOneWidget);
-    expect(find.text('Điều khiển'), findsOneWidget);
+    // Xác nhận LoginScreen xuất hiện
+    expect(find.text('Đăng nhập'), findsWidgets);
   });
 }

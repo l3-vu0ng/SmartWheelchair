@@ -227,7 +227,7 @@ class _HealthStatsRow extends StatelessWidget {
         Expanded(
           child: _MiniStatCard(
             icon: Icons.directions_walk_rounded,
-            iconColor: AppTheme.primaryBlue,
+            iconColor: AppTheme.tealSignal,
             value: '--',
             unit: 'km',
             label: 'Quãng đường',

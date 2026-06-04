@@ -170,7 +170,7 @@ class _ControlHeader extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: provider.isConnected
-                  ? AppTheme.primaryBlue.withValues(alpha: 0.1)
+                  ? AppTheme.tealSignal.withValues(alpha: 0.1)
                   : AppTheme.scaffoldBg,
               shape: BoxShape.circle,
               border: Border.all(color: AppTheme.borderLight),
@@ -178,7 +178,7 @@ class _ControlHeader extends StatelessWidget {
             child: Icon(
               Icons.power_settings_new_rounded,
               color: provider.isConnected
-                  ? AppTheme.primaryBlue
+                  ? AppTheme.tealSignal
                   : AppTheme.textSecondary,
             ),
           ),
@@ -366,16 +366,16 @@ class _DPadButton extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: isActive ? AppTheme.primaryBlue.withValues(alpha: 0.15) : AppTheme.scaffoldBg,
+          color: isActive ? AppTheme.tealSignal.withValues(alpha: 0.15) : AppTheme.scaffoldBg,
           shape: BoxShape.circle,
           border: Border.all(
-            color: isActive ? AppTheme.primaryBlue : AppTheme.borderLight,
+            color: isActive ? AppTheme.tealSignal : AppTheme.borderLight,
             width: isActive ? 2 : 1,
           ),
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: AppTheme.primaryBlue.withValues(alpha: 0.3),
+                    color: AppTheme.tealSignal.withValues(alpha: 0.3),
                     blurRadius: 10,
                     spreadRadius: 2,
                   )
@@ -384,7 +384,7 @@ class _DPadButton extends StatelessWidget {
         ),
         child: Icon(
           icon,
-          color: isActive ? AppTheme.primaryBlue : AppTheme.textSecondary,
+          color: isActive ? AppTheme.tealSignal : AppTheme.textSecondary,
           size: size * 0.6,
         ),
       ),
@@ -418,7 +418,7 @@ class _SpeedControlCard extends StatelessWidget {
               Text('TỐC ĐỘ TỐI ĐA', style: AppTheme.sectionLabel),
               Text(
                 '${maxSpeed.toStringAsFixed(0)} km/h',
-                style: AppTheme.labelBold.copyWith(color: AppTheme.primaryBlue),
+                style: AppTheme.labelBold.copyWith(color: AppTheme.tealSignal),
               ),
             ],
           ),
@@ -444,9 +444,9 @@ class _SpeedControlCard extends StatelessWidget {
               Expanded(
                 child: SliderTheme(
                   data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: AppTheme.primaryBlue,
+                    activeTrackColor: AppTheme.tealSignal,
                     inactiveTrackColor: AppTheme.borderLight,
-                    thumbColor: AppTheme.primaryBlue,
+                    thumbColor: AppTheme.tealSignal,
                     trackHeight: 6,
                     thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
                   ),
@@ -468,7 +468,7 @@ class _SpeedControlCard extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryBlue,
+                    color: AppTheme.tealSignal,
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   ),
                   child: const Icon(Icons.add, color: AppTheme.canvasWhite),
@@ -566,9 +566,9 @@ class _FullScreenControlScreenState extends State<_FullScreenControlScreen> {
                     Text('TỐC ĐỘ: ${_localSpeed.toStringAsFixed(0)} km/h', style: AppTheme.labelBold),
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: AppTheme.primaryBlue,
+                        activeTrackColor: AppTheme.tealSignal,
                         inactiveTrackColor: AppTheme.borderLight,
-                        thumbColor: AppTheme.primaryBlue,
+                        thumbColor: AppTheme.tealSignal,
                         trackHeight: 8,
                         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14),
                       ),

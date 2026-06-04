@@ -10,6 +10,7 @@
 ///   smart_wheelchair/sensors → Dữ liệu cảm biến từ ESP32 gửi lên App
 ///   smart_wheelchair/status  → Trạng thái thiết bị (Online/Offline via LWT)
 /// ============================================================================
+library;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class MqttConfig {

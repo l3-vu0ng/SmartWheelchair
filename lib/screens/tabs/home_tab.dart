@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -67,7 +69,7 @@ class _HomeHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Xin chào 👋', style: AppTheme.bodySm),
+              Text('Xin chào', style: AppTheme.bodySm),
               Text('SmartWheel', style: AppTheme.headlineLg),
             ],
           ),
@@ -134,9 +136,7 @@ class _HomeHeader extends StatelessWidget {
   String _connectionLabel(WheelchairProvider provider) {
     if (provider.isConnecting) return 'Đang kết nối...';
     if (!provider.isConnected) return 'Kết nối';
-    return provider.connectionType == ConnectionType.bluetooth
-        ? 'BLE'
-        : 'WiFi';
+    return provider.connectionType == ConnectionType.bluetooth ? 'BLE' : 'WiFi';
   }
 }
 
@@ -152,132 +152,147 @@ class _HeroCard extends StatelessWidget {
     final battery = provider.batteryLevel;
     final distance = provider.obstacleDistance;
 
+    // Teal gradient zone behind glass to give the frosted effect depth.
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppTheme.spacingLg),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppTheme.primaryBlue, AppTheme.primaryBlueDark],
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.tealSignal.withValues(alpha: 0.12),
+            AppTheme.tealDeep.withValues(alpha: 0.06),
+            AppTheme.canvasWarm,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primaryBlue.withValues(alpha: 0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top row: Tốc độ + Pin
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Tốc độ hiện tại',
-                    style: AppTheme.caption.copyWith(
-                      color: AppTheme.canvasWhite.withValues(alpha: 0.8),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        provider.isConnected ? '3.2' : '--',
-                        style: AppTheme.valueLg.copyWith(
-                          color: AppTheme.canvasWhite,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'km/h',
-                        style: AppTheme.bodyMd.copyWith(
-                          color: AppTheme.canvasWhite.withValues(alpha: 0.8),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              // Battery
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Pin xe lăn',
-                    style: AppTheme.caption.copyWith(
-                      color: AppTheme.canvasWhite.withValues(alpha: 0.8),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      // Battery bar
-                      Container(
-                        width: 60,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: AppTheme.canvasWhite.withValues(alpha: 0.5),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            padding: const EdgeInsets.all(AppTheme.spacingLg),
+            decoration: AppTheme.glassDecoration,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top row: Tốc độ + Pin
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Tốc độ hiện tại',
+                          style: AppTheme.caption.copyWith(
+                            color: AppTheme.mutedSteel,
                           ),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(2),
-                          child: FractionallySizedBox(
-                            alignment: Alignment.centerLeft,
-                            widthFactor: battery > 0 ? (battery / 100).clamp(0, 1) : 0,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: AppTheme.canvasWhite,
-                                borderRadius: BorderRadius.circular(2),
+                        const SizedBox(height: 4),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              provider.isConnected ? '3.2' : '--',
+                              style: AppTheme.valueLg.copyWith(
+                                color: AppTheme.charcoalInk,
                               ),
                             ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'km/h',
+                              style: AppTheme.bodyMd.copyWith(
+                                color: AppTheme.mutedSteel,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    // Battery
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'Pin xe lăn',
+                          style: AppTheme.caption.copyWith(
+                            color: AppTheme.mutedSteel,
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        battery > 0 ? '${battery.toStringAsFixed(0)}%' : '--%',
-                        style: AppTheme.labelBold.copyWith(
-                          color: AppTheme.canvasWhite,
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            // Battery bar
+                            Container(
+                              width: 60,
+                              height: 18,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: AppTheme.tealSignal.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(2),
+                                child: FractionallySizedBox(
+                                  alignment: Alignment.centerLeft,
+                                  widthFactor: battery > 0
+                                      ? (battery / 100).clamp(0, 1)
+                                      : 0,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.tealSignal,
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              battery > 0
+                                  ? '${battery.toStringAsFixed(0)}%'
+                                  : '--%',
+                              style: AppTheme.labelBold.copyWith(
+                                color: AppTheme.tealSignal,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
+                      ],
+                    ),
+                  ],
+                ),
 
-          const SizedBox(height: AppTheme.spacingMd),
+                const SizedBox(height: AppTheme.spacingMd),
 
-          // Bottom chips
-          Row(
-            children: [
-              _HeroChip(
-                icon: Icons.location_on_outlined,
-                label: provider.isConnected ? 'Đang hoạt động' : 'Chờ kết nối',
-              ),
-              const SizedBox(width: AppTheme.spacingXs),
-              _HeroChip(
-                icon: Icons.straighten_rounded,
-                label: distance > 0
-                    ? '${distance.toStringAsFixed(1)} cm phía trước'
-                    : 'Không có dữ liệu',
-              ),
-            ],
+                // Bottom chips
+                Row(
+                  children: [
+                    _HeroChip(
+                      icon: Icons.location_on_outlined,
+                      label: provider.isConnected
+                          ? 'Đang hoạt động'
+                          : 'Chờ kết nối',
+                    ),
+                    const SizedBox(width: AppTheme.spacingXs),
+                    _HeroChip(
+                      icon: Icons.straighten_rounded,
+                      label: distance > 0
+                          ? '${distance.toStringAsFixed(1)} cm phía trước'
+                          : 'Không có dữ liệu',
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -293,18 +308,18 @@ class _HeroChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppTheme.canvasWhite.withValues(alpha: 0.2),
+        color: AppTheme.tealWhisper,
         borderRadius: BorderRadius.circular(AppTheme.radiusPill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: AppTheme.canvasWhite),
+          Icon(icon, size: 14, color: AppTheme.tealSignal),
           const SizedBox(width: 4),
           Text(
             label,
             style: AppTheme.caption.copyWith(
-              color: AppTheme.canvasWhite,
+              color: AppTheme.tealDeep,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -339,7 +354,7 @@ class _StatCardsRow extends StatelessWidget {
         Expanded(
           child: _StatCard(
             icon: Icons.battery_charging_full_rounded,
-            iconColor: AppTheme.primaryBlue,
+            iconColor: AppTheme.tealSignal,
             iconBgColor: AppTheme.primaryBlueLight,
             label: 'Năng lượng',
             value: provider.batteryLevel > 0
@@ -418,9 +433,9 @@ class _QuickAccessList extends StatelessWidget {
       children: [
         _QuickAccessTile(
           icon: Icons.gamepad_rounded,
-          iconColor: AppTheme.primaryBlue,
+          iconColor: AppTheme.tealSignal,
           title: 'Điều khiển xe lăn',
-          subtitle: 'Joystick & giọng nói',
+          subtitle: 'D-Pad điều khiển xe lăn',
           onTap: () => onNavigate?.call(1),
         ),
         const SizedBox(height: AppTheme.spacingXs),
@@ -434,9 +449,9 @@ class _QuickAccessList extends StatelessWidget {
         const SizedBox(height: AppTheme.spacingXs),
         _QuickAccessTile(
           icon: Icons.near_me_rounded,
-          iconColor: AppTheme.primaryBlue,
-          title: 'Điều hướng',
-          subtitle: 'Tìm lối đi phù hợp',
+          iconColor: AppTheme.tealSignal,
+          title: 'Định vị',
+          subtitle: 'Tìm vị trí xe lăn',
           onTap: () => onNavigate?.call(3),
         ),
       ],

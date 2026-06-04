@@ -48,7 +48,7 @@ class _MainScreenState extends State<MainScreen> {
 
   void _onProviderChange() {
     if (!mounted || _providerRef == null) return;
-    
+
     // Check fall detection
     if (_providerRef!.isFallen && !_isShowingFallDialog) {
       _isShowingFallDialog = true;
@@ -56,10 +56,12 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     // Check low battery
-    if (_providerRef!.sensorData?.isLowBattery == true && !_hasShownLowBatteryWarning) {
+    if (_providerRef!.sensorData?.isLowBattery == true &&
+        !_hasShownLowBatteryWarning) {
       _hasShownLowBatteryWarning = true;
       _triggerLowBatteryAlert();
-    } else if (_providerRef!.sensorData != null && !_providerRef!.sensorData!.isLowBattery) {
+    } else if (_providerRef!.sensorData != null &&
+        !_providerRef!.sensorData!.isLowBattery) {
       _hasShownLowBatteryWarning = false;
     }
   }
@@ -67,22 +69,23 @@ class _MainScreenState extends State<MainScreen> {
   Future<void> _triggerFallAlert() async {
     final prefs = await SharedPreferences.getInstance();
     final notifyFall = prefs.getBool('notifyFall') ?? true;
-    
+
     if (notifyFall) {
       NotificationService().showNotification(
         id: 1,
         title: 'CẢNH BÁO NGÃ!',
-        body: 'Hệ thống phát hiện xe lăn có thể đã bị lật. Vui lòng kiểm tra ngay!',
+        body:
+            'Hệ thống phát hiện xe lăn có thể đã bị lật. Vui lòng kiểm tra ngay!',
       );
     }
-    
+
     if (mounted) _showFallDialog();
   }
 
   Future<void> _triggerLowBatteryAlert() async {
     final prefs = await SharedPreferences.getInstance();
     final notifyGeneral = prefs.getBool('notifyGeneral') ?? true;
-    
+
     if (notifyGeneral) {
       NotificationService().showNotification(
         id: 2,
@@ -90,7 +93,7 @@ class _MainScreenState extends State<MainScreen> {
         body: 'Dung lượng pin xe lăn đang ở mức thấp. Vui lòng sạc điện.',
       );
     }
-    
+
     if (mounted) _showLowBatteryDialog();
   }
 
@@ -99,13 +102,24 @@ class _MainScreenState extends State<MainScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.cardBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLg)),
+        backgroundColor: AppTheme.pureSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        ),
         title: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: AppTheme.statusOffline, size: 32),
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: AppTheme.statusOffline,
+              size: 32,
+            ),
             const SizedBox(width: 8),
-            Text('CẢNH BÁO NGÃ', style: AppTheme.headlineMd.copyWith(color: AppTheme.statusOffline)),
+            Text(
+              'CẢNH BÁO NGÃ',
+              style: AppTheme.headlineMd.copyWith(
+                color: AppTheme.statusOffline,
+              ),
+            ),
           ],
         ),
         content: Text(
@@ -114,7 +128,9 @@ class _MainScreenState extends State<MainScreen> {
         ),
         actions: [
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.statusOffline),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.statusOffline,
+            ),
             onPressed: () {
               Navigator.of(ctx).pop();
               _isShowingFallDialog = false;
@@ -168,12 +184,13 @@ class _MainScreenState extends State<MainScreen> {
 
     return Scaffold(
       extendBody: true, // Cho phép body tràn xuống dưới thanh nav lơ lửng
-      body: IndexedStack(
-        index: _currentIndex,
-        children: tabs,
-      ),
+      body: IndexedStack(index: _currentIndex, children: tabs),
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.only(left: AppTheme.spacingLg, right: AppTheme.spacingLg, bottom: AppTheme.spacingLg),
+        margin: const EdgeInsets.only(
+          left: AppTheme.spacingLg,
+          right: AppTheme.spacingLg,
+          bottom: AppTheme.spacingLg,
+        ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppTheme.radiusXl),
           child: BackdropFilter(
@@ -184,7 +201,8 @@ class _MainScreenState extends State<MainScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppTheme.spacingXs,
-                    vertical: AppTheme.spacingXs, // Tăng padding một chút cho đẹp
+                    vertical:
+                        AppTheme.spacingXs, // Tăng padding một chút cho đẹp
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -209,7 +227,7 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                       _NavItem(
                         icon: Icons.near_me_rounded,
-                        label: 'Điều hướng',
+                        label: 'Định vị',
                         isSelected: _currentIndex == 3,
                         onTap: () => setState(() => _currentIndex = 3),
                       ),
@@ -256,15 +274,17 @@ class _NavItem extends StatelessWidget {
         curve: Curves.easeOutQuart,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryBlue : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppTheme.radiusXl), // Bo tròn thành dạng pill
+          color: isSelected ? AppTheme.tealSignal : Colors.transparent,
+          borderRadius: BorderRadius.circular(
+            AppTheme.radiusXl,
+          ), // Bo tròn thành dạng pill
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppTheme.primaryBlue.withValues(alpha: 0.4),
+                    color: AppTheme.tealSignal.withValues(alpha: 0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
-                  )
+                  ),
                 ]
               : [],
         ),
@@ -277,14 +297,18 @@ class _NavItem extends StatelessWidget {
               Icon(
                 icon,
                 size: 24,
-                color: isSelected ? AppTheme.canvasWhite : AppTheme.textSecondary,
+                color: isSelected
+                    ? AppTheme.canvasWhite
+                    : AppTheme.textSecondary,
               ),
               const SizedBox(height: 3),
               Text(
                 label,
                 style: AppTheme.caption.copyWith(
                   fontSize: 10,
-                  color: isSelected ? AppTheme.canvasWhite : AppTheme.textSecondary,
+                  color: isSelected
+                      ? AppTheme.canvasWhite
+                      : AppTheme.textSecondary,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 ),
               ),

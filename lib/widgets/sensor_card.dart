@@ -21,7 +21,7 @@ class SensorCard extends StatelessWidget {
     required this.label,
     required this.value,
     required this.unit,
-    this.accentColor = AppTheme.primaryBlue,
+    this.accentColor = AppTheme.tealSignal,
     this.progressValue,
     this.status = SensorCardStatus.normal,
     this.isPrimary = false,
@@ -35,7 +35,7 @@ class SensorCard extends StatelessWidget {
         color: isPrimary ? null : AppTheme.cardBg,
         gradient: isPrimary && status == SensorCardStatus.normal
             ? const LinearGradient(
-                colors: [AppTheme.primaryBlue, AppTheme.primaryBlueDark],
+                colors: [AppTheme.tealSignal, AppTheme.tealDeep],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               )

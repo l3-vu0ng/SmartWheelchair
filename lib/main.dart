@@ -10,6 +10,9 @@ import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
+import 'services/database_service.dart';
+import 'models/user_model.dart';
+import 'screens/profile_setup_screen.dart';
 import 'firebase_options.dart';
 
 /// ============================================================================
@@ -67,7 +70,7 @@ class SmartWheelchairApp extends StatelessWidget {
         title: 'SmartWheel',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const MainScreen(), // Tạm bypass AuthWrapper để test UI
+        home: const AuthWrapper(), // Trả lại AuthWrapper
       ),
     );
   }
@@ -94,7 +97,24 @@ class AuthWrapper extends StatelessWidget {
         
         // Nếu đã đăng nhập thành công
         if (snapshot.hasData && snapshot.data != null) {
-          return const MainScreen();
+          return FutureBuilder<UserModel?>(
+            future: DatabaseService().getUser(snapshot.data!.uid),
+            builder: (context, profileSnapshot) {
+              if (profileSnapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              
+              final userModel = profileSnapshot.data;
+              // Kiểm tra xem đã cập nhật profile chưa (age và emergencyPhone)
+              if (userModel == null || userModel.age == null || userModel.emergencyPhone == null) {
+                return const ProfileSetupScreen();
+              }
+              
+              return const MainScreen();
+            },
+          );
         }
 
         // Chưa đăng nhập
