@@ -13,6 +13,12 @@ class SensorData {
   /// Mức pin ước tính (%) — đo bằng ADC trên ESP32.
   final double batteryLevel;
 
+  /// Nhịp tim (bpm) — đo bởi MAX30102.
+  final int? heartRate;
+
+  /// Nồng độ oxy trong máu (%) — đo bởi MAX30102.
+  final int? spo2;
+
   /// Vĩ độ (Latitude) của xe lăn (nếu có).
   final double? latitude;
 
@@ -25,6 +31,8 @@ class SensorData {
   const SensorData({
     required this.obstacleDistance,
     required this.batteryLevel,
+    this.heartRate,
+    this.spo2,
     this.latitude,
     this.longitude,
     required this.timestamp,
@@ -41,6 +49,8 @@ class SensorData {
     return SensorData(
       obstacleDistance: (map['distance'] as num?)?.toDouble() ?? 0.0,
       batteryLevel: (map['battery'] as num?)?.toDouble() ?? 0.0,
+      heartRate: (map['heartRate'] as num?)?.toInt(),
+      spo2: (map['spo2'] as num?)?.toInt(),
       latitude: (map['latitude'] as num?)?.toDouble(),
       longitude: (map['longitude'] as num?)?.toDouble(),
       timestamp: map['timestamp'] != null
@@ -53,6 +63,8 @@ class SensorData {
   Map<String, dynamic> toMap() => {
         'distance': obstacleDistance,
         'battery': batteryLevel,
+        if (heartRate != null) 'heartRate': heartRate,
+        if (spo2 != null) 'spo2': spo2,
         if (latitude != null) 'latitude': latitude,
         if (longitude != null) 'longitude': longitude,
         'timestamp': timestamp.millisecondsSinceEpoch ~/ 1000,

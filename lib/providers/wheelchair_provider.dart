@@ -183,11 +183,6 @@ class WheelchairProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Mô phỏng sự kiện ngã (dùng cho test).
-  void triggerFallDetectionTest() {
-    _isFallen = true;
-    notifyListeners();
-  }
 
   /// Xóa trạng thái ngã.
   void clearFallDetection() {
