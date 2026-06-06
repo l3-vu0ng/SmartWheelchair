@@ -2,10 +2,12 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../config/app_theme.dart';
 import '../../providers/wheelchair_provider.dart';
 import '../../services/connection_service.dart';
+import '../../services/database_service.dart';
 import '../../widgets/connection_dialog.dart';
 
 /// ============================================================================
@@ -57,9 +59,42 @@ class HomeTab extends StatelessWidget {
 // =============================================================================
 // HEADER — Xin chào + Trạng thái kết nối
 // =============================================================================
-class _HomeHeader extends StatelessWidget {
+class _HomeHeader extends StatefulWidget {
   final WheelchairProvider provider;
   const _HomeHeader({required this.provider});
+
+  @override
+  State<_HomeHeader> createState() => _HomeHeaderState();
+}
+
+class _HomeHeaderState extends State<_HomeHeader> {
+  String _displayName = 'Người dùng';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserName();
+  }
+
+  Future<void> _fetchUserName() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // Tạm lấy tên từ auth hoặc email trước
+      final authName = user.displayName ?? user.email?.split('@').first ?? 'Người dùng';
+      if (mounted) setState(() => _displayName = authName);
+
+      // Cố gắng lấy tên thật từ Firestore (Cài đặt)
+      try {
+        final db = DatabaseService();
+        final userModel = await db.getUser(user.uid);
+        if (userModel != null && userModel.displayName.isNotEmpty) {
+          if (mounted) setState(() => _displayName = userModel.displayName);
+        }
+      } catch (e) {
+        // Fallback to authName if database fails
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,16 +104,16 @@ class _HomeHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Xin chào', style: AppTheme.bodySm),
-              Text('SmartWheel', style: AppTheme.headlineLg),
+              Text('Xin chào quay lại,', style: AppTheme.bodySm),
+              Text(_displayName, style: AppTheme.headlineLg),
             ],
           ),
         ),
         // Connection indicator — nhấn vào để chọn kết nối WiFi/BLE
         GestureDetector(
           onTap: () {
-            if (provider.isConnected) {
-              provider.disconnectAll();
+            if (widget.provider.isConnected) {
+              widget.provider.disconnectAll();
             } else {
               ConnectionDialog.show(context);
             }
@@ -86,12 +121,12 @@ class _HomeHeader extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: provider.isConnected
+              color: widget.provider.isConnected
                   ? AppTheme.statusOnline.withValues(alpha: 0.1)
                   : AppTheme.scaffoldBg,
               borderRadius: BorderRadius.circular(AppTheme.radiusPill),
               border: Border.all(
-                color: provider.isConnected
+                color: widget.provider.isConnected
                     ? AppTheme.statusOnline.withValues(alpha: 0.3)
                     : AppTheme.borderLight,
               ),
@@ -100,17 +135,17 @@ class _HomeHeader extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  _connectionIcon(provider),
+                  _connectionIcon(widget.provider),
                   size: 16,
-                  color: provider.isConnected
+                  color: widget.provider.isConnected
                       ? AppTheme.statusOnline
                       : AppTheme.textSecondary,
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  _connectionLabel(provider),
+                  _connectionLabel(widget.provider),
                   style: AppTheme.caption.copyWith(
-                    color: provider.isConnected
+                    color: widget.provider.isConnected
                         ? AppTheme.statusOnline
                         : AppTheme.textSecondary,
                     fontWeight: FontWeight.w600,

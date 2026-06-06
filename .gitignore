@@ -47,3 +47,5 @@ app.*.map.json
 **/secrets.h
 docs/
 web/
+
+.codegraph/

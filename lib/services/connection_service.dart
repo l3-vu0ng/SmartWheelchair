@@ -11,6 +11,9 @@ enum ConnectionType {
   /// Kết nối qua Bluetooth Low Energy (BLE) trực tiếp.
   bluetooth,
 
+  /// Kết nối trực tiếp qua WiFi cục bộ (ESP32 làm Access Point) bằng WebSocket.
+  localWifi,
+
   /// Chưa kết nối.
   none,
 }

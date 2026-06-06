@@ -38,9 +38,10 @@ Hệ thống cho phép người dùng hoặc người thân điều khiển xe l
 
 ### Phần mềm & Kết nối (Software & Connectivity)
 
-* **Firmware:** C++ trên PlatformIO.
-* **Mobile App:** Framework Flutter (Ngôn ngữ Dart).
-* **Giao thức:** MQTT (Broker: HiveMQ Cloud).
+* **Firmware:** C/C++ trên nền tảng PlatformIO (dành cho ESP32).
+* **Mobile App:** Framework Flutter (Ngôn ngữ Dart) hỗ trợ Android/iOS.
+* **Backend & Dịch vụ đám mây:** Firebase (Authentication, Cloud Firestore).
+* **Giao thức & Kết nối:** Hỗ trợ đa phương thức kết nối: MQTT (Internet qua HiveMQ Cloud), WebSocket (mạng nội bộ Local WiFi của xe) và Bluetooth Low Energy (BLE).
 * **Định dạng dữ liệu:** JSON.
 
 ## 🏗️ 4. Kiến trúc Hệ thống
@@ -59,10 +60,11 @@ flowchart TD
 
     subgraph L3 ["3. Lớp Xử lý (Middleware Layer)"]
         Broker["☁️ HiveMQ Cloud (MQTT Broker)"]:::highlight
+        Firebase["☁️ Firebase (Auth & Firestore)"]:::item
     end
 
     subgraph L2 ["2. Lớp Mạng (Network Layer)"]
-        Network["📶 Wi-Fi & Giao thức MQTT"]:::item
+        Network["📶 Wi-Fi (MQTT/WebSocket) & Bluetooth (BLE)"]:::item
     end
 
     subgraph L1 ["1. Lớp Nhận thức (Perception Layer)"]
@@ -75,9 +77,11 @@ flowchart TD
     end
 
     %% Liên kết giữa các lớp
-    App <=="Luồng Điều khiển (Commands)"==> Broker
-    Broker <=="Định tuyến (Pub/Sub)"==> Network
-    Network <=="Luồng Giám sát (Telemetry)"==> ESP
+    App <--"Đồng bộ Hồ sơ"--> Firebase
+    App <=="Điều khiển (MQTT)"==> Broker
+    Broker <=="Pub/Sub"==> Network
+    App <=="Điều khiển Trực tiếp (WebSocket/BLE)"==> Network
+    Network <=="Telemetry & Commands"==> ESP
 
     class L1,L2,L3,L4 layerFill
 ```
@@ -86,9 +90,13 @@ flowchart TD
 
 ## 🌟 5. Các tính năng chính (Features)
 
-- **Điều khiển xe lăn từ xa**: Thông qua giao diện Joystick/D-pad trên ứng dụng. Hỗ trợ tùy chỉnh tốc độ linh hoạt để điều khiển 4 động cơ.
-- **Dừng khẩn cấp tự động**: Sử dụng 2 cảm biến hồng ngoại để tự động nhận diện vật cản phía trước hoặc bậc thang nguy hiểm để phanh khẩn cấp.
-- **Cảnh báo té ngã**: Phân tích góc nghiêng và gia tốc từ MPU6050, kích hoạt thông báo cảnh báo khi xe có dấu hiệu bị lật hoặc người dùng té ngã.
-- **Theo dõi sinh hiệu (Health Monitoring)**: Liên tục đo nhịp tim và nồng độ oxy trong máu (SpO2) qua MAX30102, hiển thị trực tiếp lên màn hình LCD I2C và gửi về ứng dụng di động.
-- **Kết nối kép WiFi + Bluetooth (BLE)**: Hỗ trợ hai phương thức kết nối — WiFi (MQTT qua HiveMQ Cloud) và Bluetooth Low Energy (BLE trực tiếp). Người dùng linh hoạt chọn phương thức kết nối phù hợp.
-- **Đăng nhập & Lưu trữ đám mây**: Hỗ trợ đăng nhập Google và lưu trữ dữ liệu cá nhân hóa người dùng. Đang đồng bộ hóa hồ sơ với Firestore thay vì bộ nhớ tạm. Xem thêm tại [`TONGQUAN.md`](./docs/human/TONGQUAN.md).
+- **Điều khiển xe lăn từ xa**: Thông qua giao diện Joystick hoặc D-pad trên ứng dụng. Hỗ trợ tùy chỉnh tốc độ linh hoạt để điều khiển 4 động cơ.
+- **Theo dõi sinh hiệu (Health Monitoring)**: Liên tục đo nhịp tim và nồng độ oxy trong máu (SpO2), hiển thị trực tiếp lên màn hình LCD I2C và gửi về ứng dụng di động.
+- **An toàn & Cảnh báo (Safety & Alerts)**:
+  - **Dừng khẩn cấp tự động**: Nhận diện vật cản phía trước hoặc bậc thang để phanh khẩn cấp thông qua cảm biến hồng ngoại.
+  - **Cảnh báo té ngã**: Phân tích góc nghiêng và gia tốc từ cảm biến, kích hoạt và đẩy thông báo cảnh báo (Push Notification) đến điện thoại khi phát hiện người dùng té ngã.
+- **Đa phương thức kết nối (Multi-connectivity)**: 
+  - **Chế độ Internet (MQTT)**: Điều khiển và giám sát từ xa qua bất kỳ đâu sử dụng WiFi.
+  - **Chế độ Local WiFi (WebSocket)**: Kết nối trực tiếp vào Access Point của xe lăn cho độ trễ cực thấp.
+  - **Chế độ Bluetooth (BLE)**: Kết nối khoảng cách gần không phụ thuộc vào hạ tầng mạng.
+- **Đăng nhập & Lưu trữ đám mây**: Hỗ trợ đăng nhập bằng tài khoản Google. Quản lý hồ sơ cá nhân và số điện thoại khẩn cấp, được đồng bộ hóa thời gian thực trên cơ sở dữ liệu Firebase Cloud Firestore.

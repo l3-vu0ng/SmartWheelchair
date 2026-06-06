@@ -22,6 +22,7 @@ class ConnectionDialog {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(AppTheme.spacingLg),
         decoration: const BoxDecoration(
@@ -30,8 +31,9 @@ class ConnectionDialog {
             top: Radius.circular(AppTheme.radiusXl),
           ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Handle bar
@@ -61,7 +63,6 @@ class ConnectionDialog {
               icon: Icons.wifi_rounded,
               iconColor: AppTheme.tealSignal,
               title: 'WiFi (MQTT)',
-              subtitle: 'Kết nối qua Internet · HiveMQ Cloud',
               isActive: provider.connectionType == ConnectionType.wifi,
               onTap: () {
                 Navigator.of(ctx).pop();
@@ -75,7 +76,6 @@ class ConnectionDialog {
               icon: Icons.bluetooth_rounded,
               iconColor: const Color(0xFF7C3AED),
               title: 'Bluetooth (BLE)',
-              subtitle: 'Kết nối trực tiếp · Phạm vi ~10m',
               isActive:
                   provider.connectionType == ConnectionType.bluetooth,
               onTap: () {
@@ -83,10 +83,25 @@ class ConnectionDialog {
                 BleScanDialog.show(context);
               },
             ),
+            const SizedBox(height: AppTheme.spacingSm),
+
+            // Local WiFi Option
+            _ConnectionOption(
+              icon: Icons.wifi_tethering_rounded,
+              iconColor: const Color(0xFFF59E0B), // Màu vàng cam
+              title: 'Local WiFi',
+              isActive:
+                  provider.connectionType == ConnectionType.localWifi,
+              onTap: () {
+                Navigator.of(ctx).pop();
+                provider.connectViaLocalWifi();
+              },
+            ),
             const SizedBox(height: AppTheme.spacingLg),
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -96,7 +111,6 @@ class _ConnectionOption extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final String title;
-  final String subtitle;
   final bool isActive;
   final VoidCallback onTap;
 
@@ -104,7 +118,6 @@ class _ConnectionOption extends StatelessWidget {
     required this.icon,
     required this.iconColor,
     required this.title,
-    required this.subtitle,
     required this.isActive,
     required this.onTap,
   });
@@ -140,12 +153,9 @@ class _ConnectionOption extends StatelessWidget {
             ),
             const SizedBox(width: AppTheme.spacingSm),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: AppTheme.labelBold),
-                  Text(subtitle, style: AppTheme.caption),
-                ],
+              child: Text(
+                title, 
+                style: AppTheme.labelBold.copyWith(fontSize: 16),
               ),
             ),
             if (isActive)

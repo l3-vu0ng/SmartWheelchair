@@ -209,31 +209,31 @@ class _MainScreenState extends State<MainScreen> {
                     children: [
                       _NavItem(
                         icon: Icons.home_rounded,
-                        label: 'Trang chủ',
+                        label: 'TRANG CHỦ',
                         isSelected: _currentIndex == 0,
                         onTap: () => setState(() => _currentIndex = 0),
                       ),
                       _NavItem(
                         icon: Icons.flash_on_rounded,
-                        label: 'Điều khiển',
+                        label: 'ĐIỀU KHIỂN',
                         isSelected: _currentIndex == 1,
                         onTap: () => setState(() => _currentIndex = 1),
                       ),
                       _NavItem(
                         icon: Icons.monitor_heart_rounded,
-                        label: 'Sức khỏe',
+                        label: 'SỨC KHỎE',
                         isSelected: _currentIndex == 2,
                         onTap: () => setState(() => _currentIndex = 2),
                       ),
                       _NavItem(
                         icon: Icons.near_me_rounded,
-                        label: 'Định vị',
+                        label: 'ĐỊNH VỊ',
                         isSelected: _currentIndex == 3,
                         onTap: () => setState(() => _currentIndex = 3),
                       ),
                       _NavItem(
                         icon: Icons.settings_rounded,
-                        label: 'Cài đặt',
+                        label: 'CÀI ĐẶT',
                         isSelected: _currentIndex == 4,
                         onTap: () => setState(() => _currentIndex = 4),
                       ),
@@ -266,14 +266,16 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutQuart,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutQuart,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
           color: isSelected ? AppTheme.tealSignal : Colors.transparent,
           borderRadius: BorderRadius.circular(
             AppTheme.radiusXl,
@@ -302,20 +304,24 @@ class _NavItem extends StatelessWidget {
                     : AppTheme.textSecondary,
               ),
               const SizedBox(height: 3),
-              Text(
-                label,
-                style: AppTheme.caption.copyWith(
-                  fontSize: 10,
-                  color: isSelected
-                      ? AppTheme.canvasWhite
-                      : AppTheme.textSecondary,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  style: AppTheme.caption.copyWith(
+                    fontSize: 10,
+                    color: isSelected
+                        ? AppTheme.canvasWhite
+                        : AppTheme.textSecondary,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  ),
                 ),
               ),
             ],
           ),
         ),
       ),
+    ),
     );
   }
 }

@@ -138,76 +138,76 @@ class AppTheme {
   // 7. TYPOGRAPHY — Outfit (headlines+body), JetBrains Mono (numerics)
   // ===========================================================================
 
-  static TextStyle get headlineLg => GoogleFonts.outfit(
+  static TextStyle get headlineLg => GoogleFonts.lexend(
         fontSize: 28,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.5,
         color: charcoalInk,
       );
 
-  static TextStyle get headlineMd => GoogleFonts.outfit(
+  static TextStyle get headlineMd => GoogleFonts.lexend(
         fontSize: 22,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.3,
         color: charcoalInk,
       );
 
-  static TextStyle get sectionLabel => GoogleFonts.outfit(
+  static TextStyle get sectionLabel => GoogleFonts.lexend(
         fontSize: 13,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.8,
         color: mutedSteel,
       );
 
-  static TextStyle get bodyLg => GoogleFonts.outfit(
+  static TextStyle get bodyLg => GoogleFonts.lexend(
         fontSize: 17,
         fontWeight: FontWeight.w400,
         height: 1.6,
         color: charcoalInk,
       );
 
-  static TextStyle get bodyMd => GoogleFonts.outfit(
+  static TextStyle get bodyMd => GoogleFonts.lexend(
         fontSize: 15,
         fontWeight: FontWeight.w400,
         height: 1.6,
         color: charcoalInk,
       );
 
-  static TextStyle get bodySm => GoogleFonts.outfit(
+  static TextStyle get bodySm => GoogleFonts.lexend(
         fontSize: 13,
         fontWeight: FontWeight.w400,
         height: 1.6,
         color: mutedSteel,
       );
 
-  static TextStyle get labelBold => GoogleFonts.outfit(
+  static TextStyle get labelBold => GoogleFonts.lexend(
         fontSize: 15,
         fontWeight: FontWeight.w600,
         color: charcoalInk,
       );
 
-  /// Large numeric value display — JetBrains Mono for tabular alignment.
-  static TextStyle get valueLg => GoogleFonts.jetBrainsMono(
+  /// Large numeric value display
+  static TextStyle get valueLg => GoogleFonts.lexend(
         fontSize: 36,
         fontWeight: FontWeight.w700,
         color: charcoalInk,
       );
 
   /// Medium numeric value display.
-  static TextStyle get valueMd => GoogleFonts.jetBrainsMono(
+  static TextStyle get valueMd => GoogleFonts.lexend(
         fontSize: 24,
         fontWeight: FontWeight.w700,
         color: charcoalInk,
       );
 
   /// Small numeric value — sensor readings, coordinates.
-  static TextStyle get valueSm => GoogleFonts.jetBrainsMono(
+  static TextStyle get valueSm => GoogleFonts.lexend(
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: charcoalInk,
       );
 
-  static TextStyle get caption => GoogleFonts.outfit(
+  static TextStyle get caption => GoogleFonts.lexend(
         fontSize: 12,
         fontWeight: FontWeight.w400,
         color: mutedSteel,
@@ -363,11 +363,11 @@ class AppTheme {
         unselectedItemColor: mutedSteel,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
-        selectedLabelStyle: GoogleFonts.outfit(
+        selectedLabelStyle: GoogleFonts.lexend(
           fontSize: 11,
           fontWeight: FontWeight.w600,
         ),
-        unselectedLabelStyle: GoogleFonts.outfit(
+        unselectedLabelStyle: GoogleFonts.lexend(
           fontSize: 11,
           fontWeight: FontWeight.w400,
         ),

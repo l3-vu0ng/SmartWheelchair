@@ -36,7 +36,6 @@ class HealthTab extends StatelessWidget {
                 // Stats row
                 _HealthStatsRow(provider: provider),
                 const SizedBox(height: AppTheme.spacingLg),
-
               ],
             ),
           ),
@@ -63,9 +62,7 @@ class _FallDetectionBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(
-          color: color.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -87,13 +84,15 @@ class _FallDetectionBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isFallen ? 'PHÁT HIỆN NGÃ / LẬT XE!' : 'Không có ngã nào được phát hiện',
-                  style: AppTheme.labelBold.copyWith(
-                    color: color,
-                  ),
+                  isFallen
+                      ? 'PHÁT HIỆN NGÃ / LẬT XE!'
+                      : 'Không có sự cố ngã / lật xe nào được phát hiện',
+                  style: AppTheme.labelBold.copyWith(color: color),
                 ),
                 Text(
-                  isFallen ? 'Vui lòng kiểm tra khẩn cấp' : 'Hệ thống đang theo dõi liên tục',
+                  isFallen
+                      ? 'Vui lòng kiểm tra khẩn cấp'
+                      : 'Hệ thống đang theo dõi liên tục',
                   style: AppTheme.bodySm,
                 ),
               ],
@@ -128,7 +127,11 @@ class _HeartRateCard extends StatelessWidget {
                   color: const Color(0xFFFFEBEB),
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
-                child: const Icon(Icons.favorite_rounded, size: 16, color: Color(0xFFFF6B6B)),
+                child: const Icon(
+                  Icons.favorite_rounded,
+                  size: 16,
+                  color: Color(0xFFFF6B6B),
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -161,10 +164,11 @@ class _HeartRateCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: (provider.sensorData?.heartRate != null
-                        ? AppTheme.statusOnline
-                        : AppTheme.textSecondary)
-                    .withValues(alpha: 0.1),
+                color:
+                    (provider.sensorData?.heartRate != null
+                            ? AppTheme.statusOnline
+                            : AppTheme.textSecondary)
+                        .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppTheme.radiusPill),
               ),
               child: Row(
@@ -236,7 +240,6 @@ class _HealthStatsRow extends StatelessWidget {
   }
 }
 
-
 class _MiniStatCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
@@ -277,4 +280,3 @@ class _MiniStatCard extends StatelessWidget {
     );
   }
 }
-

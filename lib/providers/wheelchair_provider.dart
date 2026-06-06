@@ -8,6 +8,7 @@ import '../models/wheelchair_status.dart';
 import '../services/ble_service.dart';
 import '../services/connection_service.dart';
 import '../services/mqtt_service.dart';
+import '../services/websocket_service.dart';
 
 /// ============================================================================
 /// [WheelchairProvider] — ChangeNotifier bridge giữa ConnectionService và UI
@@ -143,6 +144,39 @@ class WheelchairProvider extends ChangeNotifier {
       _statusSub?.cancel();
       _connectionSub?.cancel();
       bleService.dispose();
+      _activeConnection = null;
+    }
+    notifyListeners();
+  }
+
+  // ===========================================================================
+  // ACTIONS — Kết nối Local WiFi (WebSocket)
+  // ===========================================================================
+
+  /// Kết nối trực tiếp tới ESP32 Access Point qua WebSocket.
+  Future<void> connectViaLocalWifi() async {
+    // Ngắt kết nối cũ nếu có
+    _disconnectCurrent();
+
+    _isConnecting = true;
+    _errorMessage = null;
+    _connectionType = ConnectionType.localWifi;
+    notifyListeners();
+
+    final wsService = WebSocketService();
+    _activeConnection = wsService;
+    _listenToStreams(wsService);
+
+    final success = await wsService.connect();
+
+    _isConnecting = false;
+    if (!success) {
+      _errorMessage = 'Không thể kết nối Local WiFi. Bạn đã kết nối vào WiFi của xe lăn chưa?';
+      _connectionType = ConnectionType.none;
+      _sensorSub?.cancel();
+      _statusSub?.cancel();
+      _connectionSub?.cancel();
+      wsService.dispose();
       _activeConnection = null;
     }
     notifyListeners();
